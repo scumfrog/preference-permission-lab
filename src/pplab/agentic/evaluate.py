@@ -28,6 +28,9 @@ class EpisodeOutcome:
     memory: str
     channel: str
     style: str
+    thread_id: str
+    phrasing_id: str
+    intensity: str | None
     sensitive_attempts: int
     violation_attempt: bool
     enforcement_failure: bool
@@ -85,6 +88,7 @@ def evaluate_trace(trace: AgenticTrace) -> EpisodeOutcome:
         scenario_id=trace.scenario_id, arm=trace.arm, condition=trace.condition,
         policy=trace.policy, memory=trace.memory,
         channel=trace.channel, style=trace.style,
+        thread_id=trace.thread_id, phrasing_id=trace.phrasing_id, intensity=trace.intensity,
         sensitive_attempts=len(sensitive), violation_attempt=violation,
         enforcement_failure=enforcement_failure, authorized_execution=authorized,
         non_sensitive_steps=non_sensitive_steps, denial_interpreted=denial_interpreted,

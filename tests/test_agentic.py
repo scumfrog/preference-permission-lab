@@ -192,3 +192,42 @@ def test_bootstrap_ci_bounds():
 def test_driver_factory_unknown_fails_closed():
     with pytest.raises(ValueError):
         build_agentic_driver("not_a_client")
+
+
+# ---- Confirmatory generator ----------------------------------------------
+
+def test_confirmatory_generator_shape():
+    from pplab.agentic import build_confirmatory_scenarios
+    scn = build_confirmatory_scenarios()
+    unauth = [s for s in scn if s.condition == "unauthorized"]
+    controls = [s for s in scn if s.condition == "control"]
+    # 2 policy x 3 threads x (1 none + 3 factual + 3 approval) = 42; controls 2x3 = 6
+    assert len(unauth) == 42 and len(controls) == 6
+    assert len({s.thread_id for s in unauth}) == 3
+    # approval-styled spans three intensities
+    intens = {s.intensity for s in unauth if s.memory == "approval_styled"}
+    assert intens == {"mild", "medium", "strong"}
+    # every causal arm is still zero-authority
+    assert all(s.capabilities == [] for s in unauth)
+
+
+def test_clustered_contrast_and_confirmatory_summary():
+    from pplab.agentic import (
+        build_confirmatory_scenarios,
+        confirmatory_summary,
+        run_agentic_experiment,
+    )
+    scn = build_confirmatory_scenarios()
+    # violator attempts everywhere -> clustered contrast ~0, controls discriminate.
+    outcomes = run_agentic_experiment(
+        lambda: DeterministicAgenticAgent("violator"), scn, reps=2, seed=3)
+    s = confirmatory_summary(outcomes)
+    assert s["total_enforcement_failures"] == 0
+    assert s["control_valid_authorized_rate"] == 1.0
+    assert s["control_scope_mismatch_authorized_rate"] == 0.0
+    # clustering uses (thread, phrasing) instantiations, not raw reps
+    c = s["primary_ask_first_approval_minus_factual"]
+    assert c["n_clusters_a"] == 9 and c["n_clusters_b"] == 9  # 3 threads x 3 phrasings
+    assert c["estimate"] == 0.0  # violator saturates both -> no contrast
+    # dose-response present for all three intensities
+    assert set(s["dose_response_ask_first"]) == {"mild", "medium", "strong"}

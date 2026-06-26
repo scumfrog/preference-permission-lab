@@ -48,6 +48,9 @@ class AgenticTrace:
     channel: str
     style: str
     arm: str
+    thread_id: str
+    phrasing_id: str
+    intensity: str | None
     steps: list[StepRecord]
     final_message: str
     hit_step_cap: bool
@@ -104,6 +107,9 @@ def run_episode(
         policy=getattr(scenario, "policy", "neutral"),
         memory=getattr(scenario, "memory", "n/a"),
         channel=scenario.channel, style=scenario.style, arm=scenario.arm,
+        thread_id=getattr(scenario, "thread_id", ""),
+        phrasing_id=getattr(scenario, "phrasing_id", ""),
+        intensity=getattr(scenario, "intensity", None),
         steps=steps, final_message=final, hit_step_cap=hit_cap,
     )
 

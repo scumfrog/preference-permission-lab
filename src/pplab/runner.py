@@ -481,6 +481,7 @@ def agentic_cmd(
     reps: int = typer.Option(20, help="Repetitions per arm (justify with power; see PHASE_3A_DESIGN)."),
     seed: int = typer.Option(12345, help="RNG seed for episode order + bootstrap."),
     sleep_between_episodes: float = typer.Option(0.0, help="Seconds to sleep between episodes."),
+    scenario_set: str = typer.Option("pilot", help="pilot (8 arms) | confirmatory (multi-instantiation)"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Print the plan; no model calls."),
     output: Optional[str] = typer.Option(None, help="JSON output (default reports/agentic_<client>.json)."),
 ) -> None:
@@ -490,16 +491,23 @@ def agentic_cmd(
     from .agentic import (
         aggregate_by_arm,
         build_agentic_driver,
+        build_confirmatory_scenarios,
         build_phase3a_scenarios,
+        confirmatory_summary,
         primary_contrasts,
         run_agentic_experiment,
     )
 
-    scenarios = build_phase3a_scenarios()
+    if scenario_set == "confirmatory":
+        scenarios = build_confirmatory_scenarios()
+    elif scenario_set == "pilot":
+        scenarios = build_phase3a_scenarios()
+    else:
+        console.print(f"[red]Unknown scenario-set '{scenario_set}'.[/red]")
+        raise typer.Exit(code=1)
     n_arms, episodes = len(scenarios), len(scenarios) * reps
-    console.print(f"[bold]Phase 3a — agentic gateway probe[/bold]")
-    console.print(f"Client: {client}  Arms: {n_arms} (6 unauthorized: policy x memory + 2 controls)  Reps: {reps}")
-    console.print(f"Episodes: {episodes}  (each episode = a multi-step tool-calling conversation)")
+    console.print(f"[bold]Phase 3a — agentic gateway probe[/bold] (set: {scenario_set})")
+    console.print(f"Client: {client}  Arms: {n_arms}  Reps: {reps}  Episodes: {episodes}")
     console.print(f"Approx max model calls: {episodes} x up-to-6 steps = ~{episodes*6}")
     if dry_run:
         console.print("[yellow]Dry run — no model calls made.[/yellow]")
@@ -515,29 +523,45 @@ def agentic_cmd(
         raise typer.Exit(code=1)
 
     arms = aggregate_by_arm(outcomes, seed=seed)
-    contrasts = primary_contrasts(outcomes, seed=seed)
 
-    table = Table(title="Per-arm primary endpoint (95% bootstrap CI)")
-    table.add_column("Arm")
-    table.add_column("Condition")
-    table.add_column("Metric")
-    table.add_column("Rate [CI]", justify="right")
-    table.add_column("EnfFail", justify="right")
-    for arm, s in arms.items():
-        table.add_row(arm, s["condition"], s["primary_metric"],
-                      f"{s['mean']:.2f} [{s['lo']:.2f},{s['hi']:.2f}]", str(s["enforcement_failures"]))
-    console.print(table)
-    console.print("[bold]Base rates (violation-attempt):[/bold] "
-                  f"ask_first/none={contrasts['base_rate_ask_first_none']}  "
-                  f"neutral/none={contrasts['base_rate_neutral_none']}")
-    console.print("[bold]Primary contrasts (violation-attempt rate, 95% bootstrap CI):[/bold]")
-    for k in ("ask_first__approval_minus_none", "ask_first__approval_minus_factual",
-              "neutral__approval_minus_none"):
-        v = contrasts[k]
-        if v.get("estimate") is None:
-            continue
-        flag = " [red]CI excludes 0[/red]" if v.get("excludes_zero") else ""
-        console.print(f"  {k}: {v['estimate']:+.3f} [{v['lo']:+.3f},{v['hi']:+.3f}]{flag}")
+    if scenario_set == "confirmatory":
+        summary = confirmatory_summary(outcomes, seed=seed)
+        console.print("[bold]Base rates (violation-attempt) by arm:[/bold]")
+        for arm, rate in summary["base_rates"].items():
+            console.print(f"  {arm}: {rate}")
+        console.print("[bold]Primary contrasts (clustered by instantiation, 95% CI):[/bold]")
+        for k in ("primary_ask_first_approval_minus_factual",
+                  "primary_ask_first_approval_minus_none",
+                  "sanity_neutral_approval_minus_none"):
+            v = summary[k]
+            if v.get("estimate") is None:
+                continue
+            flag = " [red]CI excludes 0[/red]" if v.get("excludes_zero") else ""
+            console.print(f"  {k}: {v['estimate']:+.3f} [{v['lo']:+.3f},{v['hi']:+.3f}] "
+                          f"(clusters {v['n_clusters_a']} vs {v['n_clusters_b']}){flag}")
+        console.print(f"[bold]Dose-response (ask_first, approval intensity):[/bold] "
+                      f"{summary['dose_response_ask_first']}")
+        console.print(f"[bold]Controls:[/bold] valid_authorized={summary['control_valid_authorized_rate']}  "
+                      f"scope_mismatch_authorized={summary['control_scope_mismatch_authorized_rate']}")
+        contrasts = summary
+    else:
+        contrasts = primary_contrasts(outcomes, seed=seed)
+        table = Table(title="Per-arm primary endpoint (95% bootstrap CI)")
+        table.add_column("Arm"); table.add_column("Condition"); table.add_column("Metric")
+        table.add_column("Rate [CI]", justify="right"); table.add_column("EnfFail", justify="right")
+        for arm, s in arms.items():
+            table.add_row(arm, s["condition"], s["primary_metric"],
+                          f"{s['mean']:.2f} [{s['lo']:.2f},{s['hi']:.2f}]", str(s["enforcement_failures"]))
+        console.print(table)
+        console.print("[bold]Primary contrasts (violation-attempt rate, 95% bootstrap CI):[/bold]")
+        for k in ("ask_first__approval_minus_none", "ask_first__approval_minus_factual",
+                  "neutral__approval_minus_none"):
+            v = contrasts[k]
+            if v.get("estimate") is None:
+                continue
+            flag = " [red]CI excludes 0[/red]" if v.get("excludes_zero") else ""
+            console.print(f"  {k}: {v['estimate']:+.3f} [{v['lo']:+.3f},{v['hi']:+.3f}]{flag}")
+
     if contrasts["total_enforcement_failures"] == 0:
         console.print("[green]Gateway audit OK: 0 authorization-enforcement failures.[/green]")
     else:
@@ -545,6 +569,7 @@ def agentic_cmd(
 
     payload = {
         "phase": "3a",
+        "scenario_set": scenario_set,
         "client": client,
         "model": model,
         "temperature": temperature,
