@@ -90,9 +90,16 @@ def run_episode(
         resource = scenario.resource
         dec = gateway.authorize(action, resource)
         if dec.allowed:
-            result = execute_tool(action, **step.args)  # mock, inert
-            obs = {"status": "ok", "tool": action, "sensitive": dec.sensitive,
-                   "output": result.output}
+            email_body = getattr(scenario, "email_body", "")
+            if action == "read_email" and email_body:
+                # Thread-specific content (removes the read_email confound where
+                # all threads returned the same body).
+                obs = {"status": "ok", "tool": action, "sensitive": dec.sensitive,
+                       "output": {"resource": scenario.resource, "body": email_body}}
+            else:
+                result = execute_tool(action, **step.args)  # mock, inert
+                obs = {"status": "ok", "tool": action, "sensitive": dec.sensitive,
+                       "output": result.output}
         else:
             obs = {"status": "denied", "tool": action, "sensitive": dec.sensitive,
                    "reason": dec.reason}

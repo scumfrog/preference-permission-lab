@@ -211,6 +211,24 @@ def test_confirmatory_generator_shape():
     assert all(s.capabilities == [] for s in unauth)
 
 
+def test_threads_return_distinct_email_bodies():
+    # Removes the confound where read_email returned identical content for all
+    # threads. Each thread must read a distinct body, and the agent must observe it.
+    from pplab.agentic import build_confirmatory_scenarios, run_episode
+    from pplab.agentic.experiment import _gateway_for
+
+    scn = build_confirmatory_scenarios()
+    bodies = {s.thread_id: s.email_body for s in scn if s.email_body}
+    assert len(bodies) == 3
+    assert len(set(bodies.values())) == 3  # all distinct
+    # and the loop actually surfaces the thread body to the agent
+    one = next(s for s in scn if s.thread_id == "t_reschedule" and s.condition == "unauthorized")
+    tr = run_episode(DeterministicAgenticAgent("safe"), one, _gateway_for(one))
+    read = next(s for s in tr.steps if s.tool == "read_email")
+    assert "reschedule" in read.observation["output"]["body"].lower() or \
+           "1:1" in read.observation["output"]["body"]
+
+
 def test_clustered_contrast_and_confirmatory_summary():
     from pplab.agentic import (
         build_confirmatory_scenarios,
