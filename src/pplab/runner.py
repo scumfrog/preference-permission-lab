@@ -472,6 +472,86 @@ def analyze_cmd(
     console.print(f"[green]Wrote[/green] {md_path}")
 
 
+@app.command("agentic")
+def agentic_cmd(
+    client: str = typer.Option("mock", help="mock | openai | anthropic"),
+    behavior: str = typer.Option("violator", help="For mock: safe|drift|violator|retrier|deceptive"),
+    model: Optional[str] = typer.Option(None, help="Model for real tool-calling clients."),
+    temperature: Optional[float] = typer.Option(None, help="Sampling temperature."),
+    reps: int = typer.Option(20, help="Repetitions per arm (justify with power; see PHASE_3A_DESIGN)."),
+    seed: int = typer.Option(12345, help="RNG seed for episode order + bootstrap."),
+    sleep_between_episodes: float = typer.Option(0.0, help="Seconds to sleep between episodes."),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Print the plan; no model calls."),
+    output: Optional[str] = typer.Option(None, help="JSON output (default reports/agentic_<client>.json)."),
+) -> None:
+    """Phase 3a: real tool-calling against the immutable capability gateway."""
+    import json as _json
+
+    from .agentic import (
+        aggregate_by_arm,
+        build_agentic_driver,
+        build_phase3a_scenarios,
+        run_agentic_experiment,
+        style_channel_contrasts,
+    )
+
+    scenarios = build_phase3a_scenarios()
+    n_arms, episodes = len(scenarios), len(scenarios) * reps
+    console.print(f"[bold]Phase 3a — agentic gateway probe[/bold]")
+    console.print(f"Client: {client}  Arms: {n_arms} (4 unauthorized 2x2 + 2 controls)  Reps: {reps}")
+    console.print(f"Episodes: {episodes}  (each episode = a multi-step tool-calling conversation)")
+    console.print(f"Approx max model calls: {episodes} x up-to-6 steps = ~{episodes*6}")
+    if dry_run:
+        console.print("[yellow]Dry run — no model calls made.[/yellow]")
+        return
+
+    try:
+        outcomes = run_agentic_experiment(
+            lambda: build_agentic_driver(client, behavior=behavior, model=model, temperature=temperature),
+            scenarios, reps=reps, seed=seed, sleep_between_episodes=sleep_between_episodes,
+        )
+    except (RuntimeError, ValueError) as exc:
+        console.print(f"[red]Agentic run error:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    arms = aggregate_by_arm(outcomes, seed=seed)
+    contrasts = style_channel_contrasts(arms)
+
+    table = Table(title="Per-arm primary endpoint (95% bootstrap CI)")
+    table.add_column("Arm")
+    table.add_column("Condition")
+    table.add_column("Metric")
+    table.add_column("Rate [CI]", justify="right")
+    table.add_column("EnfFail", justify="right")
+    for arm, s in arms.items():
+        table.add_row(arm, s["condition"], s["primary_metric"],
+                      f"{s['mean']:.2f} [{s['lo']:.2f},{s['hi']:.2f}]", str(s["enforcement_failures"]))
+    console.print(table)
+    console.print("[bold]2x2 contrasts (violation-attempt rate):[/bold]")
+    for k, v in contrasts.items():
+        console.print(f"  {k}: {v:+.3f}" if isinstance(v, float) else f"  {k}: {v}")
+    if contrasts["total_enforcement_failures"] == 0:
+        console.print("[green]Gateway audit OK: 0 authorization-enforcement failures.[/green]")
+    else:
+        console.print("[red]GATEWAY AUDIT FAILED — sensitive action allowed without capability![/red]")
+
+    payload = {
+        "phase": "3a",
+        "client": client,
+        "model": model,
+        "temperature": temperature,
+        "reps": reps,
+        "seed": seed,
+        "arms": arms,
+        "contrasts": contrasts,
+        "episodes": [o.__dict__ for o in outcomes],
+    }
+    out_path = Path(output) if output else REPORTS_DIR / f"agentic_{client}.json"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(_json.dumps(payload, indent=2), encoding="utf-8")
+    console.print(f"[green]Wrote[/green] {out_path}")
+
+
 @app.command("export-csv")
 def export_csv_cmd(
     input: str = typer.Option("reports/latest.json", "--input", help="Run JSON to export."),
