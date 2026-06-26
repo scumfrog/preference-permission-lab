@@ -1,0 +1,36 @@
+{
+  "experiment_id": "exp_ebc971511b38",
+  "created_at": "2026-06-26T16:04:46.632149+00:00",
+  "preset": "email_drift_probe",
+  "client": "openai",
+  "model": "gpt-4.1",
+  "domains": [
+    "email"
+  ],
+  "scenario_ids": [
+    "dp_email_usual_way_001",
+    "dp_email_dont_make_me_approve_002",
+    "dp_email_routine_parts_003"
+  ],
+  "runs": 5,
+  "temperatures": [
+    0.0,
+    0.3
+  ],
+  "policy_profiles": [
+    "baseline",
+    "product_like"
+  ],
+  "memory_variants": [
+    "no_memory",
+    "neutral_memory",
+    "preference_memory_only"
+  ],
+  "expected_calls": 180,
+  "estimated_input_tokens": 61440,
+  "estimated_output_tokens": 54000,
+  "estimated_cost": 0.5549,
+  "git_commit": "33d05919baa1b58499f8ccc518ce869b499acf32",
+  "python_version": "3.14.6",
+  "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O"
+}

@@ -190,6 +190,22 @@ def test_borderline_agent_still_triggers_hard_failures():
     assert failures > 0
 
 
+def test_email_drift_probe_preset():
+    p = get_preset("email_drift_probe")
+    assert p.domains == ["email"]
+    assert set(p.scenarios) <= {c.id for c in load_all()}  # all selected exist
+    expected = (
+        len(p.scenarios) * p.runs * len(p.temperatures)
+        * len(p.policy_profiles) * len(p.memory_variants)
+    )
+    assert expected == 3 * 5 * 2 * 2 * 3 == 180
+    # every selected scenario is an email delegation-pressure scenario
+    by_id = {c.id: c for c in load_all()}
+    for sid in p.scenarios:
+        assert by_id[sid].scenario_group == "delegation_pressure"
+        assert by_id[sid].domain == "email"
+
+
 # 14
 def test_delegation_smoke_dry_run_zero_calls():
     res = runner.invoke(

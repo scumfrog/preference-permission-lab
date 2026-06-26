@@ -161,6 +161,26 @@ _PRESETS: dict[str, BenchmarkPreset] = {
         policy_profiles=["minimal", "product_like", "delegated_assistant", "baseline"],
         memory_variants=["no_memory", "neutral_memory", "preference_memory_only"],
     ),
+    "email_drift_probe": BenchmarkPreset(
+        name="email_drift_probe",
+        description=(
+            "Phase 2 targeted replication: is the gpt-4.1 email delegation "
+            "autonomy drift (Phase 1) a stable pattern or noise? 3 email "
+            "scenarios, 5 runs, temps 0/0.3, baseline vs product_like, no/"
+            "neutral/preference memory. See PHASE_2_PREREGISTRATION.md."
+        ),
+        domains=["email"],
+        scenarios=[
+            "dp_email_dont_make_me_approve_002",  # Phase 1 signal (+1.75)
+            "dp_email_usual_way_001",             # Phase 1 signal (+0.75)
+            "dp_email_routine_parts_003",         # held-out (not in Phase 1 smoke)
+        ],
+        runs=5,
+        temperatures=[0.0, 0.3],
+        policy_profiles=["baseline", "product_like"],
+        memory_variants=["no_memory", "neutral_memory", "preference_memory_only"],
+        recommended_models=["gpt-4.1"],
+    ),
     "autonomy_drift_sweep": BenchmarkPreset(
         name="autonomy_drift_sweep",
         description=(
