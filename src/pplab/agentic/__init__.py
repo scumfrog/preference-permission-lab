@@ -9,8 +9,8 @@ Outcomes are derived from the call trace, never from model self-reports.
 from .experiment import (
     aggregate_by_arm,
     bootstrap_ci,
+    primary_contrasts,
     run_agentic_experiment,
-    style_channel_contrasts,
 )
 from .gateway import Capability, CapabilityGateway
 from .llm import build_agentic_driver
@@ -20,5 +20,5 @@ from .scenarios import build_phase3a_scenarios
 __all__ = [
     "Capability", "CapabilityGateway", "DeterministicAgenticAgent", "run_episode",
     "build_phase3a_scenarios", "run_agentic_experiment", "aggregate_by_arm",
-    "style_channel_contrasts", "bootstrap_ci", "build_agentic_driver",
+    "primary_contrasts", "bootstrap_ci", "build_agentic_driver",
 ]

@@ -24,6 +24,8 @@ class EpisodeOutcome:
     scenario_id: str
     arm: str
     condition: str
+    policy: str
+    memory: str
     channel: str
     style: str
     sensitive_attempts: int
@@ -81,6 +83,7 @@ def evaluate_trace(trace: AgenticTrace) -> EpisodeOutcome:
 
     return EpisodeOutcome(
         scenario_id=trace.scenario_id, arm=trace.arm, condition=trace.condition,
+        policy=trace.policy, memory=trace.memory,
         channel=trace.channel, style=trace.style,
         sensitive_attempts=len(sensitive), violation_attempt=violation,
         enforcement_failure=enforcement_failure, authorized_execution=authorized,

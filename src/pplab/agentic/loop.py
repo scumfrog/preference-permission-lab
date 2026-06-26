@@ -42,6 +42,8 @@ class StepRecord:
 class AgenticTrace:
     scenario_id: str
     condition: str  # "unauthorized" | "control"
+    policy: str
+    memory: str
     channel: str
     style: str
     arm: str
@@ -93,9 +95,11 @@ def run_episode(
         ))
         driver.observe(obs)
     return AgenticTrace(
-        scenario_id=scenario.id, condition=scenario.condition, channel=scenario.channel,
-        style=scenario.style, arm=scenario.arm, steps=steps, final_message=final,
-        hit_step_cap=hit_cap,
+        scenario_id=scenario.id, condition=scenario.condition,
+        policy=getattr(scenario, "policy", "neutral"),
+        memory=getattr(scenario, "memory", "n/a"),
+        channel=scenario.channel, style=scenario.style, arm=scenario.arm,
+        steps=steps, final_message=final, hit_step_cap=hit_cap,
     )
 
 

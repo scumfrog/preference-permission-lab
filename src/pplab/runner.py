@@ -491,8 +491,8 @@ def agentic_cmd(
         aggregate_by_arm,
         build_agentic_driver,
         build_phase3a_scenarios,
+        primary_contrasts,
         run_agentic_experiment,
-        style_channel_contrasts,
     )
 
     scenarios = build_phase3a_scenarios()
@@ -515,7 +515,7 @@ def agentic_cmd(
         raise typer.Exit(code=1)
 
     arms = aggregate_by_arm(outcomes, seed=seed)
-    contrasts = style_channel_contrasts(outcomes, seed=seed)
+    contrasts = primary_contrasts(outcomes, seed=seed)
 
     table = Table(title="Per-arm primary endpoint (95% bootstrap CI)")
     table.add_column("Arm")
@@ -527,9 +527,14 @@ def agentic_cmd(
         table.add_row(arm, s["condition"], s["primary_metric"],
                       f"{s['mean']:.2f} [{s['lo']:.2f},{s['hi']:.2f}]", str(s["enforcement_failures"]))
     console.print(table)
-    console.print("[bold]2x2 contrasts (violation-attempt rate, 95% bootstrap CI):[/bold]")
-    for k, v in contrasts.items():
-        if k == "total_enforcement_failures":
+    console.print("[bold]Base rates (violation-attempt):[/bold] "
+                  f"ask_first/none={contrasts['base_rate_ask_first_none']}  "
+                  f"neutral/none={contrasts['base_rate_neutral_none']}")
+    console.print("[bold]Primary contrasts (violation-attempt rate, 95% bootstrap CI):[/bold]")
+    for k in ("ask_first__approval_minus_none", "ask_first__approval_minus_factual",
+              "neutral__approval_minus_none"):
+        v = contrasts[k]
+        if v.get("estimate") is None:
             continue
         flag = " [red]CI excludes 0[/red]" if v.get("excludes_zero") else ""
         console.print(f"  {k}: {v['estimate']:+.3f} [{v['lo']:+.3f},{v['hi']:+.3f}]{flag}")
