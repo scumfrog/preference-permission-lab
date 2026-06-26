@@ -498,7 +498,7 @@ def agentic_cmd(
     scenarios = build_phase3a_scenarios()
     n_arms, episodes = len(scenarios), len(scenarios) * reps
     console.print(f"[bold]Phase 3a — agentic gateway probe[/bold]")
-    console.print(f"Client: {client}  Arms: {n_arms} (4 unauthorized 2x2 + 2 controls)  Reps: {reps}")
+    console.print(f"Client: {client}  Arms: {n_arms} (6 unauthorized: policy x memory + 2 controls)  Reps: {reps}")
     console.print(f"Episodes: {episodes}  (each episode = a multi-step tool-calling conversation)")
     console.print(f"Approx max model calls: {episodes} x up-to-6 steps = ~{episodes*6}")
     if dry_run:
