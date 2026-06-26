@@ -1,0 +1,32 @@
+annotated-doc==0.0.4
+annotated-types==0.7.0
+anthropic==0.112.0
+anyio==4.14.1
+certifi==2026.6.17
+distro==1.9.0
+docstring_parser==0.18.0
+h11==0.16.0
+httpcore==1.0.9
+httpx==0.28.1
+idna==3.18
+iniconfig==2.3.0
+jiter==0.15.0
+markdown-it-py==4.2.0
+mdurl==0.1.2
+openai==2.44.0
+packaging==26.2
+pluggy==1.6.0
+# Editable Git install with no remote (preference-permission-lab==0.1.0)
+-e /Users/gdeangel/Documents/Projects/security/Agents_Lab_Confussion/preference-permission-lab
+pydantic==2.13.4
+pydantic_core==2.46.4
+Pygments==2.20.0
+pytest==9.1.1
+PyYAML==6.0.3
+rich==15.0.0
+shellingham==1.5.4
+sniffio==1.3.1
+tqdm==4.68.3
+typer==0.26.7
+typing-inspection==0.4.2
+typing_extensions==4.15.0

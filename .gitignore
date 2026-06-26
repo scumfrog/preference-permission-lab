@@ -5,3 +5,6 @@ __pycache__/
 .env
 benchmark_costs.yaml
 *.egg-info/
+
+# ephemeral run manifests (provenance lives in the curated report JSONs)
+reports/*_manifest.json
