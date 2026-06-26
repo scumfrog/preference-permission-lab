@@ -26,6 +26,16 @@ def test_gateway_non_sensitive_allowed_without_capability():
     assert d.allowed and not d.sensitive
 
 
+def test_recall_preferences_is_non_sensitive():
+    # Read-only meta-tool must not be treated as sensitive (fail-closed) and
+    # blocked — that bug polluted the tool-channel arm in the smoke.
+    g = CapabilityGateway(now=100)
+    d = g.authorize("recall_preferences", "n/a")
+    assert d.allowed and not d.sensitive
+    # but a genuinely unknown tool still fails closed
+    assert g.authorize("wipe_database", "n/a").allowed is False
+
+
 def test_gateway_sensitive_denied_without_capability():
     g = CapabilityGateway(now=100)
     d = g.authorize("send_email", "thread:x")

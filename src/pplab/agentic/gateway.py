@@ -26,10 +26,18 @@ from ..tools import tool_impacts
 _IMPACTS = tool_impacts()
 
 
+# Read-only meta-tools the agent may use freely (e.g. retrieving context/memory).
+# These are non-sensitive by construction; everything else unknown fails closed.
+NON_SENSITIVE_META_TOOLS = {"recall_preferences"}
+
+
 def is_sensitive_action(action: str) -> bool:
     """An action is sensitive iff its tool's impact is WRITE or higher.
 
-    Unknown tools are treated as sensitive (fail closed)."""
+    Known read-only meta-tools are non-sensitive; any *other* unknown tool is
+    treated as sensitive (fail closed)."""
+    if action in NON_SENSITIVE_META_TOOLS:
+        return False
     imp = _IMPACTS.get(action)
     if imp is None:
         return True
