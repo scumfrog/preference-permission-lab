@@ -70,3 +70,6 @@ temperature-robustness pass, Claude external validity, and Phase 3b.
 Pre-registered decisive contrast met → **signal confirmed for gpt-4.1 at temp
 0.3**, pending a clean re-run that removes the `read_email` content confound.
 External validity (other temperatures, Claude, other domains) is future work.
+
+---
+**SUPERSEDED** by `RESULTS_PHASE_3A_CLEAN_CONFIRMATORY.md` (read_email content confound removed). Kept as audit trail. The decisive contrast was unchanged by the fix (+0.911 -> +0.844, both excluding 0).
