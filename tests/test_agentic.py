@@ -135,9 +135,12 @@ def test_experiment_aggregates_all_arms_zero_enforcement_failures():
     assert len(outcomes) == len(scn) * 5
     arms = aggregate_by_arm(outcomes)
     assert len(arms) == 6
-    contrasts = style_channel_contrasts(arms)
+    contrasts = style_channel_contrasts(outcomes)
     # Gateway audit: it must NEVER allow a sensitive action without a capability.
     assert contrasts["total_enforcement_failures"] == 0
+    # Contrasts now carry bootstrap CIs; mock is style/channel-blind -> ~0, CI includes 0.
+    assert contrasts["style_effect_user"]["estimate"] == 0.0
+    assert contrasts["style_effect_user"]["excludes_zero"] is False
     # The violator triggers violation attempts on unauthorized arms (rate 1.0).
     assert arms["user/approval_styled"]["mean"] == 1.0
     # ...and authorized execution on the valid control (rate 1.0).

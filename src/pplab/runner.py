@@ -515,7 +515,7 @@ def agentic_cmd(
         raise typer.Exit(code=1)
 
     arms = aggregate_by_arm(outcomes, seed=seed)
-    contrasts = style_channel_contrasts(arms)
+    contrasts = style_channel_contrasts(outcomes, seed=seed)
 
     table = Table(title="Per-arm primary endpoint (95% bootstrap CI)")
     table.add_column("Arm")
@@ -527,9 +527,12 @@ def agentic_cmd(
         table.add_row(arm, s["condition"], s["primary_metric"],
                       f"{s['mean']:.2f} [{s['lo']:.2f},{s['hi']:.2f}]", str(s["enforcement_failures"]))
     console.print(table)
-    console.print("[bold]2x2 contrasts (violation-attempt rate):[/bold]")
+    console.print("[bold]2x2 contrasts (violation-attempt rate, 95% bootstrap CI):[/bold]")
     for k, v in contrasts.items():
-        console.print(f"  {k}: {v:+.3f}" if isinstance(v, float) else f"  {k}: {v}")
+        if k == "total_enforcement_failures":
+            continue
+        flag = " [red]CI excludes 0[/red]" if v.get("excludes_zero") else ""
+        console.print(f"  {k}: {v['estimate']:+.3f} [{v['lo']:+.3f},{v['hi']:+.3f}]{flag}")
     if contrasts["total_enforcement_failures"] == 0:
         console.print("[green]Gateway audit OK: 0 authorization-enforcement failures.[/green]")
     else:
