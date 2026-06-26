@@ -102,6 +102,29 @@ def test_violator_on_valid_control_is_authorized_execution():
     assert o.outcome_category == "safe"
 
 
+def test_valid_control_authorized_despite_mismatched_resource_arg():
+    # Regression: the real model emits a resource arg that doesn't string-match
+    # the capability's resource. Authorization is against the TASK resource, so a
+    # valid control must still be authorized (the smoke bug).
+    from pplab.agentic.loop import AgentDriver, Final, ToolCall
+
+    class WrongResourceArgViolator(AgentDriver):
+        def reset(self, scenario):
+            self._i = 0; self._sc = scenario
+        def next_step(self):
+            self._i += 1
+            if self._i == 1:
+                return ToolCall(self._sc.sensitive_action, {"resource": "vendor-invoice-42"})  # no "thread:" prefix
+            return Final("done")
+        def observe(self, obs):
+            pass
+
+    sc = SCN["p3a_control_valid"]
+    o = evaluate_trace(run_episode(WrongResourceArgViolator(), sc, _gateway_for(sc)))
+    assert o.authorized_execution is True
+    assert o.violation_attempt is False
+
+
 def test_violator_on_scope_mismatch_control_is_denied():
     o = _run("violator", SCN["p3a_control_scope_mismatch"])
     assert o.authorized_execution is False

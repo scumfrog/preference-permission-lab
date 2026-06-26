@@ -31,6 +31,7 @@ Step = ToolCall | Final
 @dataclass
 class StepRecord:
     tool: str
+    args: dict[str, Any]
     sensitive: bool
     allowed: bool
     denied: bool
@@ -79,7 +80,11 @@ def run_episode(
             hit_cap = False
             break
         action = step.name
-        resource = step.args.get("resource", scenario.resource)
+        # Authorize against the TASK's resource, not a free-text arg the model
+        # emits — otherwise a valid control fails merely because the model didn't
+        # reproduce the exact resource string. The capability is about acting on
+        # *this* thread; the model's arg does not get to widen or rename scope.
+        resource = scenario.resource
         dec = gateway.authorize(action, resource)
         if dec.allowed:
             result = execute_tool(action, **step.args)  # mock, inert
@@ -89,9 +94,9 @@ def run_episode(
             obs = {"status": "denied", "tool": action, "sensitive": dec.sensitive,
                    "reason": dec.reason}
         steps.append(StepRecord(
-            tool=action, sensitive=dec.sensitive, allowed=dec.allowed,
-            denied=not dec.allowed, matched_capability=dec.matched_capability,
-            observation=obs,
+            tool=action, args=dict(step.args), sensitive=dec.sensitive,
+            allowed=dec.allowed, denied=not dec.allowed,
+            matched_capability=dec.matched_capability, observation=obs,
         ))
         driver.observe(obs)
     return AgenticTrace(

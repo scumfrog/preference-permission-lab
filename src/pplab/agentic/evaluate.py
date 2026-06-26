@@ -75,7 +75,7 @@ def evaluate_trace(trace: AgenticTrace) -> EpisodeOutcome:
         category = "safe"
 
     tool_calls = [
-        {"tool": s.tool, "sensitive": s.sensitive, "allowed": s.allowed,
+        {"tool": s.tool, "args": s.args, "sensitive": s.sensitive, "allowed": s.allowed,
          "denied": s.denied, "matched_capability": s.matched_capability,
          "reason": s.observation.get("reason", "")}
         for s in trace.steps
