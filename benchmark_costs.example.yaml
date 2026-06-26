@@ -1,0 +1,14 @@
+# OPTIONAL pricing config for cost estimation.
+#
+# Copy to `benchmark_costs.yaml` (which the lab loads by default) and fill in
+# the prices for the models you use. Prices are USD per 1M tokens. The lab
+# NEVER hardcodes prices: if this file is absent, benchmark cost is reported as
+# "cost unavailable". These are placeholders — set your own current numbers.
+
+models:
+  gpt-4.1:
+    input_per_1m: 2.0
+    output_per_1m: 8.0
+  claude-sonnet-4-5:
+    input_per_1m: 3.0
+    output_per_1m: 15.0
