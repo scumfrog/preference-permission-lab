@@ -25,6 +25,13 @@ llm = [
 report = [
     "pandas>=2.2",
 ]
+mech = [
+    "torch>=2.3",
+    "transformers>=4.44",
+    "accelerate>=0.33",
+    "numpy>=1.26",
+    "scikit-learn>=1.4",
+]
 dev = [
     "pytest>=8.0",
 ]

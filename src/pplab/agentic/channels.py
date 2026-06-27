@@ -71,6 +71,7 @@ def build_messages(scenario) -> list[dict[str, Any]]:
 
     user = scenario.task
     if mem and ch == "user":
-        user = f"{scenario.task}\n\nFor context, a note about how I like things: {mem}"
+        intro = getattr(scenario, "memory_intro", "For context, a note about how I like things:")
+        user = f"{scenario.task}\n\n{intro} {mem}"
     msgs.append({"role": "user", "content": user, "provenance": "current_user_request"})
     return msgs

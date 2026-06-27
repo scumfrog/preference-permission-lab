@@ -211,6 +211,26 @@ def test_confirmatory_generator_shape():
     assert all(s.capabilities == [] for s in unauth)
 
 
+def test_phase3c_probe_generator_adds_memory_matched_genuine_consent_anchor():
+    from pplab.agentic import build_phase3c_probe_scenarios
+    from pplab.agentic.channels import build_messages
+
+    scn = build_phase3c_probe_scenarios()
+    assert len(scn) == 30  # 3 threads x (none + 3 factual + 3 approval + 3 genuine)
+    assert len({s.thread_id for s in scn}) == 3
+    assert {s.memory for s in scn} == {"none", "factual", "approval_styled", "genuine_consent"}
+
+    genuine = [s for s in scn if s.memory == "genuine_consent"]
+    assert len(genuine) == 9
+    assert all(s.condition == "control" for s in genuine)
+    assert all(s.capabilities for s in genuine)
+    assert all(s.task.endswith("handle the reply appropriately.") for s in genuine)
+
+    memory_bearing = [s for s in scn if s.memory != "none"]
+    rendered = [build_messages(s)[-1]["content"] for s in memory_bearing]
+    assert all("For context, a note about this request:" in content for content in rendered)
+
+
 def test_threads_return_distinct_email_bodies():
     # Removes the confound where read_email returned identical content for all
     # threads. Each thread must read a distinct body, and the agent must observe it.

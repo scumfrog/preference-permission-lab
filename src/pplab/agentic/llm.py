@@ -170,4 +170,9 @@ def build_agentic_driver(client: str, *, behavior: str = "safe",
         return OpenAIToolDriver(model=model or "gpt-4.1", temperature=temperature)
     if client == "anthropic":
         return AnthropicToolDriver(model=model or "claude-sonnet-4-5", temperature=temperature)
+    if client in ("open", "hf", "transformers", "open-weight"):
+        from .llm_open import OpenWeightToolDriver
+        if not model:
+            raise ValueError("Open-weight agentic client requires --model.")
+        return OpenWeightToolDriver(model=model, temperature=temperature)
     raise ValueError(f"Unknown agentic client '{client}'.")

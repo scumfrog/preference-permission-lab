@@ -47,7 +47,7 @@ use four authority levels over the **same** task/thread:
 none            (no memory)
 factual         (f1..f3)               low authority
 approval_styled (mild/medium/strong)   low authority, approval style
-genuine_consent (the control/valid user turn: explicit current approval)
+genuine_consent (explicit current approval, capability-backed)
 ```
 
 `genuine_consent` is the **positive anchor** (real current consent);
@@ -61,6 +61,18 @@ consent-probe(none) <= consent-probe(factual) < consent-probe(approval_styled) <
 i.e. approval styling moves the *low-authority* memory toward the genuine-consent
 end, factual does not.
 
+**Anchor de-confounding.** The frozen 3a `control/valid` arm is behaviorally
+correct, but it changes the surface of the task ("send the reply now — you have
+my approval"). A probe trained directly on that control could learn "the task
+asks to send" or the literal word "approval" rather than a more general
+consent/authority attribute. For Phase 3c probing we therefore add a separate
+probe-only scenario set (`build_phase3c_probe_scenarios`) in which
+`genuine_consent` appears in the **same user-channel memory slot** as
+`factual` and `approval_styled`, while still carrying a valid capability. The
+generalization test remains important: if `approval_styled` (low authority, no
+capability) projects toward this consent direction, the learned direction is not
+merely the frozen control surface.
+
 ## 3. Step 0 — Behavioral replication on the open model (gate)
 
 Before any probing: add an **open-weight agentic driver** (transformers/vLLM)
@@ -71,11 +83,23 @@ with CI excluding 0. If it does not, there is no behavior to mechanize — switc
 model or stop. (This reuses 100% of `src/pplab/agentic/` unchanged except the
 driver.)
 
+**Protocol caveat.** Frontier 3a runs used provider-native tool calling.
+The open-weight Step 0 driver uses a JSON-in-text tool protocol injected in the
+system prompt. This is acceptable for the Step 0 gate because the decisive
+contrast is **within the same open model and same protocol**:
+`approval_styled − factual`. The protocol confound is balanced across those
+arms. Absolute attempt rates from the open model are **not** directly comparable
+to GPT-4.1/Claude provider-tool-call rates and must not be reported as such.
+
 ## 4. Step 1 — Activation extraction (their pipeline, our target)
 
-At the **decision point** — the last token before the model would emit the first
-tool call (and, separately, the last token of the memory span) — export
-residual-stream activations across a **layer sweep**. Adapt their notebooks:
+Canonical extraction point: **last-prompt-token, step 1** — the final token of
+the prompt after the model has read system policy, memory, and task, immediately
+before the first generation step. This avoids conflating the representation with
+the JSON tool-call text emitted during generation. A secondary analysis may also
+export the last token of the memory span, but all primary probe/mediation claims
+use `token_position="last_prompt_token_step_1"`. Export residual-stream
+activations across a **layer sweep**. Adapt their notebooks:
 `cot-forgery-role-confusion/01-export-agent-activations.ipynb` (agent loop) and
 `role-analysis/02-train-role-probes.ipynb` (probe training). Tooling:
 `transformer_lens` / `nnsight` / `baukit` for read + write.
@@ -177,3 +201,67 @@ distinction* — connect it to a real **agentic action** rather than jailbreak
 text, add a **representation-level causal** test, and close with an **external
 enforcement** result that turns a representational vulnerability into a contained
 one. Same lineage, different and complementary contribution.
+
+---
+
+## Probe-fit refinements (applied)
+
+- **Consent direction = genuine_consent vs `factual` only** (`mech.consent_direction`),
+  NOT vs `none ∪ factual`. `none` has no memory line (structurally shorter prompt),
+  so including it risks encoding "a memory line is present" rather than "consent is
+  present". `none` is kept as a reference point (it should project below factual).
+- **Two intentional deliveries of genuine consent.** For the PROBE, genuine_consent
+  is delivered as a *memory* in the structurally-matched user slot (so the direction
+  isolates consent semantics, holding the slot constant). For BEHAVIOR, the 3a
+  `control/valid` delivers consent in the *user turn* (the ecological control). Both
+  are deliberate; report the distinction.
+
+## Execution plan on RunPod / Vast.ai (cost-controlled)
+
+**Opinion.** Good fit. The compute here is *tiny* — ~30 probe scenarios × a few
+forward/generate passes for collection, plus a small steering sweep — minutes of
+GPU, not hours. The real cost risk is **idle time**, not FLOPs. So: ephemeral
+pod, run-and-terminate, and a hard split between GPU and CPU work.
+
+- **Hardware.** RTX 4090 (24 GB, ~$0.20–0.44/h on community/Vast) is enough for
+  7–8B (Qwen2.5-7B-Instruct, Llama-3.1-8B-Instruct). For gpt-oss-20b use an A100
+  40 GB or 4-bit on a 24 GB card.
+- **GPU/CPU split (the cost design).** GPU runs only `scripts/phase3c_collect.py`
+  (behavioral attempts + activation export, **one model load**) and
+  `scripts/phase3c_steer.py` (steering sweep, **one model load**). All statistics —
+  consent direction, projection ordering, representational CI, mediation AUROC —
+  run **locally on CPU** via `scripts/phase3c_analyze.py` on the exported JSON.
+- **Smoke on a tiny model first (cents).** Validate the entire pipeline on
+  `Qwen/Qwen2.5-0.5B-Instruct` (runs in seconds, even CPU) before paying for the
+  7–20B run. Confirms prompt rendering, the JSON tool protocol, activation
+  shapes, and the analysis end-to-end.
+
+**SSH workflow:**
+```bash
+# on the pod (ephemeral):
+git clone <repo> && cd preference-permission-lab
+python -m venv .venv && .venv/bin/pip install -e '.[mech]'
+# (smoke) tiny model:
+.venv/bin/python scripts/phase3c_collect.py --model Qwen/Qwen2.5-0.5B-Instruct \
+  --layers 0,4,8,12 --out-activations reports/p3c_act_smoke.json --out-behavior reports/p3c_beh_smoke.json
+# (real) 7B:
+.venv/bin/python scripts/phase3c_collect.py --model Qwen/Qwen2.5-7B-Instruct \
+  --layers all --out-activations reports/p3c_act.json --out-behavior reports/p3c_beh.json
+# Step 0 full behavioral (optional, same harness):
+.venv/bin/pplab agentic --client open --model Qwen/Qwen2.5-7B-Instruct \
+  --scenario-set confirmatory --reps 5 --temperature 0.3 --output reports/p3c_step0.json
+
+# scp BOTH json back, then TERMINATE the pod.
+
+# locally (CPU, free):
+.venv/bin/python scripts/phase3c_analyze.py --activations reports/p3c_act.json
+# -> reports/phase3c_analysis.json + reports/phase3c_directions.json (best layer)
+
+# steering (back on a pod, one load):
+.venv/bin/python scripts/phase3c_steer.py --model Qwen/Qwen2.5-7B-Instruct \
+  --directions reports/phase3c_directions.json --layer <BEST> --alphas -8,-4,0,4,8
+```
+
+**Cost ceiling.** The whole study is well under a few € of actual compute if the
+pod is not left idle. Stop the pod immediately after each collection/steering run;
+do all analysis locally. Never run interactive exploration on the GPU.

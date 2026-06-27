@@ -514,8 +514,12 @@ def agentic_cmd(
         return
 
     try:
+        # Build ONE driver and reuse it across episodes (run_episode calls
+        # reset() each time). Critical for open-weight clients so the model is
+        # loaded once, not reloaded per episode.
+        _driver = build_agentic_driver(client, behavior=behavior, model=model, temperature=temperature)
         outcomes = run_agentic_experiment(
-            lambda: build_agentic_driver(client, behavior=behavior, model=model, temperature=temperature),
+            lambda: _driver,
             scenarios, reps=reps, seed=seed, sleep_between_episodes=sleep_between_episodes,
         )
     except (RuntimeError, ValueError) as exc:
