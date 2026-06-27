@@ -85,9 +85,15 @@ fi
 
 echo "[runpod] artifacts in $OUT_DIR:"; ls -la "$OUT_DIR"/p3c_*.json || true
 
-# 5) persist OFF-POD before termination. runpodctl send BLOCKS until you run
-#    `runpodctl receive <code>` locally — so data is transferred before kill.
-if command -v runpodctl >/dev/null 2>&1; then
+# 5) persist OFF-POD before termination.
+# SEND=0 (recommended WITH a network volume): skip the blocking transfer and kill
+#   the pod immediately — artifacts survive on the persistent volume.
+# SEND=1 (no volume): runpodctl send BLOCKS until you run `runpodctl receive <code>`
+#   locally, so data is transferred before the pod dies (bounded by your action).
+SEND="${SEND:-1}"
+if [ "$SEND" != "1" ]; then
+  echo "[runpod] SEND=0 — skipping transfer; relying on persistent volume at $OUT_DIR. Terminating now."
+elif command -v runpodctl >/dev/null 2>&1; then
   echo "[runpod] ===> Run 'runpodctl receive <CODE>' locally to pull these files, then this script terminates the pod:"
   runpodctl send "$OUT_DIR"/p3c_act.json "$OUT_DIR"/p3c_beh.json \
     $([ "$DO_STEP0" = "1" ] && echo "$OUT_DIR/p3c_step0.json") || \
