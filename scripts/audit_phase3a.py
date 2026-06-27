@@ -22,6 +22,14 @@ sys.path.insert(0, str(ROOT / "src"))
 from pplab.agentic.evaluate import EpisodeOutcome  # noqa: E402
 from pplab.agentic.experiment import clustered_contrast_ci  # noqa: E402
 
+# Pinned so every figure in PAPER.md is deterministic and reproducible.
+SEED = 20260626
+B = 20000
+
+
+def cc(outs, a, b):
+    return clustered_contrast_ci(outs, a, b, seed=SEED, B=B)
+
 RESULTS = {
     "gpt-4.1 temp 0.3 (CANONICAL clean confirmatory)": "reports/phase3a_clean_confirmatory_gpt41_t03.json",
     "gpt-4.1 temp 0.0 (robustness)": "reports/phase3a_robust_gpt41_t00.json",
@@ -65,15 +73,23 @@ def audit_one(label: str, path: str) -> bool:
         exe = rate(a, executed_sensitive)
         print(f"  {arm:28} {len(a):>3}  {att:>8}  {exe:>9}")
 
-    # Decisive + corroborating contrasts, recomputed (clustered by instantiation).
-    dec = clustered_contrast_ci(outs, "ask_first/approval_styled", "ask_first/factual")
-    cor = clustered_contrast_ci(outs, "ask_first/approval_styled", "ask_first/none")
-    print(f"  DECISIVE  approval-factual: est={dec['estimate']:+.4f} "
-          f"CI[{dec['lo']:+.4f},{dec['hi']:+.4f}] ({dec['n_clusters_a']}v{dec['n_clusters_b']}) "
-          f"-> {'EXCLUDES 0' if dec['excludes_zero'] else 'includes 0'}")
-    print(f"  CORROB    approval-none   : est={cor['estimate']:+.4f} "
-          f"CI[{cor['lo']:+.4f},{cor['hi']:+.4f}] ({cor['n_clusters_a']}v{cor['n_clusters_b']}) "
-          f"-> {'EXCLUDES 0' if cor['excludes_zero'] else 'includes 0'}")
+    # Contrasts, recomputed (clustered by instantiation; seed/B pinned).
+    for lab, a, b in [("DECISIVE approval-factual", "ask_first/approval_styled", "ask_first/factual"),
+                      ("CORROB   approval-none   ", "ask_first/approval_styled", "ask_first/none"),
+                      ("SANITY   neutral apr-none ", "neutral/approval_styled", "neutral/none")]:
+        v = cc(outs, a, b)
+        print(f"  {lab}: est={v['estimate']:+.4f} CI[{v['lo']:+.4f},{v['hi']:+.4f}] "
+              f"({v['n_clusters_a']}v{v['n_clusters_b']}) "
+              f"-> {'EXCLUDES 0' if v['excludes_zero'] else 'includes 0'}")
+
+    # Dose-response (approval intensity, ask_first).
+    dr = {}
+    for inten in ("mild", "medium", "strong"):
+        a = [o for o in outs if o.policy == "ask_first" and o.memory == "approval_styled"
+             and o.intensity == inten]
+        if a:
+            dr[inten] = (rate(a, lambda o: o.violation_attempt), len(a))
+    print("  DOSE (attempt by intensity): " + "  ".join(f"{k}={v[0]} (n={v[1]})" for k, v in dr.items()))
     return enf == 0
 
 
