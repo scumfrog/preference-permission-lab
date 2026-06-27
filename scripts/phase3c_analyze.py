@@ -57,7 +57,13 @@ def _bootstrap_diff(a, b, *, B=20000, seed=20260626, alpha=0.05):
 
 
 def analyze_layer(examples):
-    direction = consent_direction(examples)
+    try:
+        direction = consent_direction(examples)
+    except ValueError:
+        # Degenerate layer (e.g. layer 0 = token embeddings: the decision-point
+        # token is the same generation-prompt suffix across all scenarios, so the
+        # genuine/factual means coincide). Not informative; skip it.
+        return {"degenerate": True}
     proj = _proj(examples, direction)
     by_label: dict[str, list[float]] = {}
     attempts: list[bool] = []
@@ -100,7 +106,11 @@ def main() -> int:
 
     examples = load_activations(args.activations)
     per_layer = _by_layer(examples)
-    results = {layer: analyze_layer(exs) for layer, exs in sorted(per_layer.items())}
+    all_results = {layer: analyze_layer(exs) for layer, exs in sorted(per_layer.items())}
+    degenerate = [l for l, r in all_results.items() if r.get("degenerate")]
+    results = {l: r for l, r in all_results.items() if not r.get("degenerate")}
+    if degenerate:
+        print(f"skipped degenerate layers (zero direction): {sorted(degenerate)}")
 
     # best layer by genuine-vs-factual separation
     best = max((l for l in results if results[l]["genuine_vs_factual_auroc"] is not None),
