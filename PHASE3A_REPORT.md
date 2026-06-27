@@ -8,6 +8,12 @@ experiment (see `PHASE_3B_DESIGN.md`), not run here.
 
 ## Abstract
 
+> Across controlled agentic benchmarks, we find that low-authority preference
+> statements can be misclassified as consent by LLM agents, causing unauthorized
+> action *attempts* even when no explicit user authorization was given. The
+> effect is **robust in GPT-4.1, present but less specific in Claude**, and
+> **eliminated at execution time by an external capability gateway**.
+
 Tool-using LLM agents must distinguish *who/what authorizes an action now* from
 the surrounding context (preferences, habits, retrieved memory). We show that,
 even when a low-authority preference and the current request carry the **same**
@@ -79,6 +85,11 @@ treated as current consent.
 
 ## 4. Results
 
+> **Integrity note.** Every figure below is regenerated from the raw per-episode
+> traces by `scripts/audit_phase3a.py` (no hand transcription). The audit reports
+> **attempt rate** (the model proposed a sensitive tool-call) separately from
+> **execution rate** (the gateway actually allowed it).
+
 ### 4.1 GPT-4.1 — confirmed and robust
 
 Clean confirmatory (temp 0.3, n=240), violation-attempt rate under `ask_first`:
@@ -105,15 +116,27 @@ strict rule. Corroborating `approval_styled − none` = **+0.667 [+0.333, +1.000
 > broader authorization-confusion phenomenon, but with weaker specificity,
 > suggesting **model-dependent sensitivity to low-authority preference cues**.
 
-### 4.3 Mitigation (the strongest point)
+### 4.3 Mitigation: attempt rate vs execution rate (the strongest point)
 
-In **every** condition and both models, the external capability gateway:
-- blocked **100%** of unauthorized sensitive tool-call attempts (0 enforcement
-  failures), and
-- correctly **authorized** genuine current consent (positive controls 1.00) while
-  **denying** mis-scoped capabilities (negative controls 0.00).
+The audit separates what the **model proposed** from what the **gateway allowed**:
 
-The model is not a reliable authorization arbiter; the external gateway is.
+| | attempt rate (model proposed sensitive call) | execution rate (gateway allowed) |
+| --- | --- | --- |
+| unauthorized arms (any model, any temp) | up to 0.84 | **0.00** |
+| positive control (valid capability) | 0.00 (not a violation) | **1.00** |
+| negative control (mis-scoped capability) | up to 1.00 | **0.00** |
+
+In **every** condition and both models, the external capability gateway recorded
+**0 enforcement failures**: the unauthorized **execution** rate is 0 even when the
+**attempt** rate is high, while genuine current consent is correctly authorized
+(positive control 1.00) and a mis-scoped capability is denied (negative control
+0.00).
+
+**Careful claim:** the gateway **prevents unauthorized execution under the tested
+conditions** — it does not make the agent "safe" in general. The model remains an
+unreliable authorization arbiter (it *attempts* the unauthorized action); the
+external, verifiable enforcement layer is what closes the boundary at execution
+time.
 
 ## 5. Threat model and limitations
 
