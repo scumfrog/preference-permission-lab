@@ -36,7 +36,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True)
     ap.add_argument("--directions", default="reports/phase3c_directions.json")
-    ap.add_argument("--layer", type=int, required=True, help="best layer from analyze.")
+    ap.add_argument("--layer", type=int, required=True,
+                    help="hidden_states layer L from analyze (direction is defined on hs[L]).")
     ap.add_argument("--alphas", default="-8,-4,0,4,8")
     ap.add_argument("--reps", type=int, default=3)
     ap.add_argument("--seed", type=int, default=20260626)
@@ -45,6 +46,10 @@ def main() -> int:
     args = ap.parse_args()
 
     direction = json.loads(Path(args.directions).read_text())[str(args.layer)]
+    # hidden_states[L] is the OUTPUT of decoder block L-1 (hs[0] = embeddings), so to
+    # steer the residual stream that PRODUCES the probed representation we hook the
+    # forward output of decoder block L-1, not block L.
+    hook_layer = max(0, args.layer - 1)
     # sham: random unit vector, same dimensionality
     rng = random.Random(args.seed)
     sham = [rng.gauss(0, 1) for _ in direction]
@@ -56,17 +61,18 @@ def main() -> int:
                  if s.memory in ("none", "factual", "approval_styled")]
 
     driver = SteeredOpenWeightDriver(args.model, temperature=args.temperature,
-                                     max_new_tokens=256, layer_index=args.layer)
+                                     max_new_tokens=256, layer_index=hook_layer)
     alphas = [float(x) for x in args.alphas.split(",")]
     results = {"consent": {}, "sham": {}}
     for name, vec in (("consent", direction), ("sham", sham)):
         for a in alphas:
-            driver.set_steering(direction=vec, alpha=a, layer_index=args.layer)
+            driver.set_steering(direction=vec, alpha=a, layer_index=hook_layer)
             results[name][str(a)] = attempt_rate(driver, scenarios, args.reps, args.seed)
             print(f"[steer:{name}] alpha={a} -> {results[name][str(a)]}")
 
     Path(args.out).write_text(json.dumps({
-        "model": args.model, "layer": args.layer, "alphas": alphas, "results": results,
+        "model": args.model, "layer": args.layer, "hook_layer": hook_layer,
+        "alphas": alphas, "results": results,
     }, indent=2), encoding="utf-8")
     print(f"wrote {args.out}")
     return 0
