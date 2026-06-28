@@ -1,0 +1,453 @@
+{
+  "best_layer": 1,
+  "by_layer": {
+    "1": {
+      "mean_projection_by_label": {
+        "none": -0.7181,
+        "factual": -1.118,
+        "approval_styled": -0.8572,
+        "genuine_consent": -0.4119
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 0.2609,
+        "lo": 0.2163,
+        "hi": 0.3045,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.8
+    },
+    "2": {
+      "mean_projection_by_label": {
+        "none": 3.8732,
+        "factual": 3.167,
+        "approval_styled": 3.649,
+        "genuine_consent": 4.3064
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 0.482,
+        "lo": 0.3887,
+        "hi": 0.5734,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.8
+    },
+    "3": {
+      "mean_projection_by_label": {
+        "none": 2.5226,
+        "factual": 1.5894,
+        "approval_styled": 2.1979,
+        "genuine_consent": 2.9628
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 0.6085,
+        "lo": 0.5134,
+        "hi": 0.7006,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.7
+    },
+    "4": {
+      "mean_projection_by_label": {
+        "none": -0.6582,
+        "factual": -1.8381,
+        "approval_styled": -1.068,
+        "genuine_consent": -0.2819
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 0.77,
+        "lo": 0.6429,
+        "hi": 0.8917,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.6
+    },
+    "5": {
+      "mean_projection_by_label": {
+        "none": -1.9867,
+        "factual": -3.2146,
+        "approval_styled": -2.3723,
+        "genuine_consent": -1.4488
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 0.8423,
+        "lo": 0.6932,
+        "hi": 0.988,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.6
+    },
+    "6": {
+      "mean_projection_by_label": {
+        "none": 1.5049,
+        "factual": -0.2351,
+        "approval_styled": 0.8736,
+        "genuine_consent": 1.8453
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 1.1086,
+        "lo": 0.9045,
+        "hi": 1.316,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.55
+    },
+    "7": {
+      "mean_projection_by_label": {
+        "none": -0.5063,
+        "factual": -1.5275,
+        "approval_styled": -0.3903,
+        "genuine_consent": 0.6776
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 1.1372,
+        "lo": 0.9026,
+        "hi": 1.3612,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.55
+    },
+    "8": {
+      "mean_projection_by_label": {
+        "none": -1.2009,
+        "factual": -1.9323,
+        "approval_styled": -0.6914,
+        "genuine_consent": 0.4478
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 1.2409,
+        "lo": 0.9981,
+        "hi": 1.4955,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.6
+    },
+    "9": {
+      "mean_projection_by_label": {
+        "none": -2.1843,
+        "factual": -2.7048,
+        "approval_styled": -1.4489,
+        "genuine_consent": -0.2305
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 1.2559,
+        "lo": 1.0192,
+        "hi": 1.4958,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.65
+    },
+    "10": {
+      "mean_projection_by_label": {
+        "none": -1.5909,
+        "factual": -1.9547,
+        "approval_styled": -0.5925,
+        "genuine_consent": 0.6649
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 1.3621,
+        "lo": 1.1196,
+        "hi": 1.6012,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.7
+    },
+    "11": {
+      "mean_projection_by_label": {
+        "none": -0.9882,
+        "factual": -1.6339,
+        "approval_styled": -0.085,
+        "genuine_consent": 1.2277
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 1.5488,
+        "lo": 1.2899,
+        "hi": 1.7973,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.8
+    },
+    "12": {
+      "mean_projection_by_label": {
+        "none": 1.9681,
+        "factual": 1.0916,
+        "approval_styled": 2.604,
+        "genuine_consent": 4.2634
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 1.5124,
+        "lo": 1.2042,
+        "hi": 1.8106,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.8
+    },
+    "13": {
+      "mean_projection_by_label": {
+        "none": -2.7023,
+        "factual": -3.8747,
+        "approval_styled": -2.3731,
+        "genuine_consent": -0.7571
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 1.5017,
+        "lo": 1.2258,
+        "hi": 1.7657,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.75
+    },
+    "14": {
+      "mean_projection_by_label": {
+        "none": 1.1339,
+        "factual": -0.8838,
+        "approval_styled": 0.7461,
+        "genuine_consent": 2.8821
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 1.6299,
+        "lo": 1.2335,
+        "hi": 2.0073,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.55
+    },
+    "15": {
+      "mean_projection_by_label": {
+        "none": 0.8445,
+        "factual": -2.7462,
+        "approval_styled": -0.6048,
+        "genuine_consent": 2.7741
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 2.1414,
+        "lo": 1.7241,
+        "hi": 2.5584,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.5
+    },
+    "16": {
+      "mean_projection_by_label": {
+        "none": -2.0976,
+        "factual": -5.9177,
+        "approval_styled": -3.5591,
+        "genuine_consent": -0.2683
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 2.3586,
+        "lo": 1.8526,
+        "hi": 2.8578,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.5
+    },
+    "17": {
+      "mean_projection_by_label": {
+        "none": 9.9846,
+        "factual": 5.4574,
+        "approval_styled": 8.1293,
+        "genuine_consent": 11.771
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 2.6719,
+        "lo": 2.1065,
+        "hi": 3.2278,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.5
+    },
+    "18": {
+      "mean_projection_by_label": {
+        "none": 5.8577,
+        "factual": 1.776,
+        "approval_styled": 4.6274,
+        "genuine_consent": 8.5611
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 2.8514,
+        "lo": 2.2138,
+        "hi": 3.48,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.5
+    },
+    "19": {
+      "mean_projection_by_label": {
+        "none": -2.614,
+        "factual": -7.5178,
+        "approval_styled": -3.5921,
+        "genuine_consent": 3.2898
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 3.9257,
+        "lo": 1.9256,
+        "hi": 5.9834,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.2
+    },
+    "20": {
+      "mean_projection_by_label": {
+        "none": -1.9805,
+        "factual": -6.1419,
+        "approval_styled": -0.6919,
+        "genuine_consent": 6.4842
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 5.4501,
+        "lo": 2.8463,
+        "hi": 7.9921,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.2
+    },
+    "21": {
+      "mean_projection_by_label": {
+        "none": 2.1616,
+        "factual": -0.0364,
+        "approval_styled": 6.446,
+        "genuine_consent": 15.7912
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 6.4824,
+        "lo": 3.2393,
+        "hi": 9.6762,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.15
+    },
+    "22": {
+      "mean_projection_by_label": {
+        "none": 14.3535,
+        "factual": 7.0972,
+        "approval_styled": 14.2941,
+        "genuine_consent": 24.959
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 7.1969,
+        "lo": 2.8303,
+        "hi": 11.6483,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.15
+    },
+    "23": {
+      "mean_projection_by_label": {
+        "none": 13.075,
+        "factual": 3.6178,
+        "approval_styled": 11.8428,
+        "genuine_consent": 24.8371
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 8.2251,
+        "lo": 2.7777,
+        "hi": 13.7633,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.15
+    },
+    "24": {
+      "mean_projection_by_label": {
+        "none": 7.2241,
+        "factual": -2.3545,
+        "approval_styled": 7.363,
+        "genuine_consent": 22.9531
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 9.7175,
+        "lo": 3.8698,
+        "hi": 15.6353,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.15
+    },
+    "25": {
+      "mean_projection_by_label": {
+        "none": -0.8654,
+        "factual": -11.933,
+        "approval_styled": 0.3421,
+        "genuine_consent": 19.5174
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 12.2751,
+        "lo": 5.3967,
+        "hi": 19.1835,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.15
+    },
+    "26": {
+      "mean_projection_by_label": {
+        "none": 2.9801,
+        "factual": -10.1559,
+        "approval_styled": 4.8215,
+        "genuine_consent": 27.3293
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 14.9774,
+        "lo": 6.7751,
+        "hi": 23.2674,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.15
+    },
+    "27": {
+      "mean_projection_by_label": {
+        "none": 13.114,
+        "factual": -0.8483,
+        "approval_styled": 16.7616,
+        "genuine_consent": 41.5498
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 17.6098,
+        "lo": 8.1151,
+        "hi": 27.1532,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.15
+    },
+    "28": {
+      "mean_projection_by_label": {
+        "none": -0.1782,
+        "factual": -17.3767,
+        "approval_styled": -1.3596,
+        "genuine_consent": 21.0164
+      },
+      "genuine_vs_factual_auroc": 1.0,
+      "approval_minus_factual": {
+        "estimate": 16.0171,
+        "lo": 6.1513,
+        "hi": 26.2576,
+        "excludes_zero": true
+      },
+      "mediation_auroc_proj_vs_attempt": 0.15
+    }
+  }
+}

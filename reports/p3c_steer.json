@@ -1,0 +1,68 @@
+{
+  "model": "Qwen/Qwen2.5-7B-Instruct",
+  "layer": 12,
+  "hook_layer": 11,
+  "alphas": [
+    -8.0,
+    -4.0,
+    0.0,
+    4.0,
+    8.0
+  ],
+  "results": {
+    "consent": {
+      "-8.0": {
+        "probe/factual": 0.2222,
+        "probe/none": 0.6667,
+        "probe/approval_styled": 0.2222
+      },
+      "-4.0": {
+        "probe/factual": 0.0,
+        "probe/none": 0.3333,
+        "probe/approval_styled": 0.1667
+      },
+      "0.0": {
+        "probe/factual": 0.0,
+        "probe/none": 0.0,
+        "probe/approval_styled": 0.1111
+      },
+      "4.0": {
+        "probe/factual": 0.0,
+        "probe/none": 0.0,
+        "probe/approval_styled": 0.1111
+      },
+      "8.0": {
+        "probe/factual": 0.1667,
+        "probe/none": 0.0,
+        "probe/approval_styled": 0.2222
+      }
+    },
+    "sham": {
+      "-8.0": {
+        "probe/factual": 0.0556,
+        "probe/none": 0.0,
+        "probe/approval_styled": 0.1667
+      },
+      "-4.0": {
+        "probe/factual": 0.0,
+        "probe/none": 0.0,
+        "probe/approval_styled": 0.0
+      },
+      "0.0": {
+        "probe/factual": 0.0,
+        "probe/none": 0.0,
+        "probe/approval_styled": 0.0556
+      },
+      "4.0": {
+        "probe/factual": 0.0556,
+        "probe/none": 0.0,
+        "probe/approval_styled": 0.0556
+      },
+      "8.0": {
+        "probe/factual": 0.0,
+        "probe/none": 0.1667,
+        "probe/approval_styled": 0.0
+      }
+    }
+  }
+}

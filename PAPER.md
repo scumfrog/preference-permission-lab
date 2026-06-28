@@ -26,14 +26,15 @@ attempt rate 0.22), so its approval-over-factual contrast is directional but not
 confirmed (+0.444, CI [+0.000, +0.778]). In every condition, an external,
 fail-closed **capability gateway** reduced the unauthorized *execution* rate to
 0 while authorizing genuine consent controls (positive control execution 1.00,
-mis-scoped control 0.00, 0 enforcement failures). A mechanistic probe on an
-open-weight model (Qwen2.5-7B-Instruct) shows the confusion is **represented
-internally**: approval-styled low-authority memory projects closer to genuine
-consent than factual preference does on a linear consent direction at every layer
-(approval−factual > 0, bootstrap CI excludes 0 at all 28 layers), and the consent
-projection predicts the behavioral attempt (AUROC ≈ 0.80); causal steering along
-that direction moves the attempt rate more than a sham direction, though the sign
-structure is not cleanly monotone at the floor behavioral baseline. We argue this
+mis-scoped control 0.00, 0 enforcement failures). An *exploratory* mechanistic
+follow-up on an open-weight model (Qwen2.5-7B-Instruct, which is behaviorally
+*resistant* and did not clear the pre-registered behavioral gate) nonetheless finds
+the confusion is **represented internally**: approval-styled low-authority memory
+projects closer to genuine consent than factual preference on a linear consent
+direction at every layer (approval−factual > 0, bootstrap CI excludes 0 at all 28
+layers), and that projection predicts the behavioral attempt (AUROC ≈ 0.80); causal
+steering shows direction-specific but non-monotone effects — a hint of deeper
+structure, not a clean causal demonstration. We argue this
 is an *authority-classification* failure distinct from prompt injection, that textual
 policy cannot resolve it (the model that must obey the policy is also asked to
 judge whether its precondition holds), and that authorization must be enforced
@@ -412,24 +413,36 @@ perfect.
 
 ---
 
-## 7. Mechanistic analysis (open-weight): is the confusion represented internally?
+## 7. Exploratory mechanistic analysis (open-weight): is the confusion represented internally?
 
-The behavioral results show *what* the agent does; they do not show whether
+**Framing — read this first.** This section is *exploratory*, not a pre-registered
+confirmation. The Phase 3c design specified a behavioral gate to be cleared before
+mechanizing: `approval_styled − factual ≥ +0.20` (the MEI) with a CI excluding 0 on
+the open model. **Qwen2.5-7B-Instruct did not clear it** — its attempt rates under
+`ask_first` are `approval_styled` 0.074, `factual` 0.000, `none` 0.000, so the
+contrast is only +0.074 (< MEI) and the model is behaviorally *resistant* to the
+attack. We nonetheless ran the mechanistic probe, because a model that mostly does
+*not* act on the confusion is a useful test of whether it still *encodes* it. Treat
+everything below as post-gate exploratory evidence on a behaviorally resistant
+model, not as confirmation of Phase 3c.
+
+The behavioral results (§6) show *what* the agent does; they do not show whether
 approval wording raises an internal consent representation that *predicts* the
-attempt. We test this directly on an open-weight model where hidden states are
-observable and editable. **Model:** `Qwen2.5-7B-Instruct` (bf16, single RTX 4090).
-**Probe set:** 30 structurally matched scenarios (3 threads × {1 `none`, 3
-`factual`, 3 `approval_styled`, 3 `genuine_consent`}; shared neutral memory
-preamble; only `genuine_consent` carries a real capability). **Decision point:**
-the last prompt token at step 1 (the model is about to choose its first tool).
-Activations are exported at all 29 hidden states (layer 0 = embeddings, skipped as
-degenerate). All statistics run locally on CPU; the GPU is used only to collect
-activations and to steer. Containment is unchanged: across the 90 behavioral
-episodes, **0 sensitive executions and 0 enforcement failures** — the gateway
-blocked every unauthorized attempt, so the study measures representation and
-causation without producing a side effect.
+attempt. We test this on an open-weight model where hidden states are observable
+and editable. **Model:** `Qwen2.5-7B-Instruct` (bf16, single RTX 4090). **Probe
+set:** 30 structurally matched scenarios (3 threads × {1 `none`, 3 `factual`, 3
+`approval_styled`, 3 `genuine_consent`}; shared neutral memory preamble; only
+`genuine_consent` carries a real capability). **Decision point:** the last prompt
+token at step 1 (the model is about to choose its first tool). Activations are
+exported at all 29 hidden states (layer 0 = embeddings, skipped as degenerate). All
+statistics run locally on CPU; the GPU is used only to collect activations and to
+steer. **Containment held:** across the 90 behavioral episodes there were **0
+unauthorized executions and 0 enforcement failures**; the only executions were the
+`genuine_consent` controls, which carry a valid capability and executed at 0.259
+(authorized, by design). The study therefore measures representation and causation
+without any unauthorized side effect.
 
-**7.1 Representational claim — confirmed.** We define a *consent direction* per
+**7.1 Representational signal — present and robust.** We define a *consent direction* per
 layer as the L2-normalized difference of means between `genuine_consent` and
 `factual` activations, and project every arm onto it. The ordering is
 `factual < none ≲ approval_styled < genuine_consent` at essentially every layer,
@@ -444,22 +457,24 @@ This is suggestive rather than decisive: in this model the attempt rate sits nea
 the floor (`approval_styled` 0.074, `factual`/`none` 0.000, `genuine_consent`
 0.259), so few positive attempts back the estimate.
 
-**7.3 Causal steering — partial, direction-specific.** Adding `α · consent_direction`
-to the residual stream at the producing layer (hidden-state layer 12, i.e. decoder
-block 11) and re-running the episode, with a random *sham* unit vector as control,
-across two sweeps (|α| ≤ 8 and a gentle |α| ≤ 4): perturbing the consent subspace
-moves unauthorized-attempt rates **substantially more than the sham direction**
-(e.g. `none`: 0.0 → 0.5 at α = −4 along consent, vs 0.0 for sham), reproduced in
-both sweeps. The consent axis is therefore *causally relevant*, not a passive
-correlate. However, the sign is not the naive monotone: positive steering did not
-cleanly induce attempts, and negative steering did not suppress the
-`genuine_consent` arm. We interpret this cautiously — driving the axis to
-off-manifold *negative* projections (a region no natural arm occupies) specifically
-disrupts the model's "absence-of-consent → ask-first" caution, and the sham control
-does not, so the effect is consent-specific rather than generic perturbation. The
-floor behavioral baseline leaves little room to demonstrate downward control.
-Isolating polarity cleanly (a layer sweep for the causal optimum, and activation
-*patching* rather than additive steering) is future work.
+**7.3 Causal steering — direction-specific effects, exploratory.** Adding
+`α · consent_direction` to the residual stream at the producing layer (hidden-state
+layer 12, i.e. decoder block 11) and re-running the episode, with a random *sham*
+unit vector as control, across two sweeps (|α| ≤ 8 and a gentle |α| ≤ 4): we observe
+**direction-specific steering effects that are stronger in selected negative-α,
+low-consent arms than the sham direction** (e.g. `none`: 0.0 → 0.5 at α = −4 along
+consent, vs 0.0 for sham, in both sweeps). This suggests the consent axis is
+causally engaged, but the evidence is exploratory and we do not overclaim: the
+effect is **not monotone in α**, positive steering did not cleanly induce attempts,
+negative steering did not suppress the `genuine_consent` arm, and the sham control
+itself moves some arms at some α (it is not inert everywhere). Against a floor
+behavioral baseline, this is a hint rather than a clean causal demonstration. The
+most plausible reading is that driving the axis to off-manifold *negative*
+projections (a region no natural arm occupies) disrupts the model's
+"absence-of-consent → ask-first" caution more than a random perturbation does;
+isolating the consent feature's polarity cleanly (a layer sweep for the causal
+optimum, and activation *patching* rather than additive steering, on a model that
+clears the behavioral gate) is future work.
 
 **7.4 Cross-model reading.** Qwen2.5-7B **resists the attack behaviorally** far
 more than GPT-4.1 (~0.84 under `ask_first`), yet it still **represents**
@@ -553,11 +568,14 @@ credential-scrubbed.
 The harness (`src/pplab/agentic/`), tests (full suite green), pinned
 `requirements.lock` (Python 3.14.6, openai 2.44.0, anthropic 0.112.0), exact
 commands, fixed seeds, pre-registrations, and per-phase git tags
-(`phase-1-negative-with-drift` … `phase-3a-frozen`) are released. Every figure is
-regenerated from the raw episode traces by `scripts/audit_phase3a.py`. The §7
-mechanistic pipeline (`scripts/phase3c_{collect,analyze,steer}.py`, GPU-collect /
-local-CPU-analyze split) and its artifacts (`reports/p3c_*.json`,
-`RESULTS_PHASE_3C_MECHANISTIC.md`) are released alongside. See Appendix B–C.
+(`phase-1-negative-with-drift` … `phase-3a-frozen`) are released. Every **Phase 3a**
+figure is regenerated from the raw episode traces by `scripts/audit_phase3a.py`.
+The exploratory §7 pipeline (`scripts/phase3c_{collect,analyze,steer}.py`,
+GPU-collect / local-CPU-analyze split) is released with its derived artifacts
+(`reports/p3c_{beh,analysis,directions,steer,steer_clarify}.json`,
+`RESULTS_PHASE_3C_MECHANISTIC.md`); the 38 MB raw activation tensor
+(`reports/p3c_act.json`) is git-ignored but regenerated exactly by
+`phase3c_collect.py` at the pinned seed. See Appendix B–C.
 
 ---
 
@@ -624,8 +642,33 @@ pplab agentic --client openai --model gpt-4.1 --temperature 0.3 \
   --scenario-set confirmatory --reps 5 --seed 20260626 \
   --output reports/phase3a_clean_confirmatory_gpt41_t03.json
 # robustness 0.0 / 0.7 (reps 3); Claude external (reps 5) after a reps-1 driver smoke
-# regenerate every figure:
+# regenerate every Phase 3a figure:
 .venv/bin/python scripts/audit_phase3a.py
+```
+
+**Exploratory Phase 3c (§7), open-weight, GPU-collect / local-CPU-analyze.**
+Run on a single RTX 4090; `HF_HOME` on a persistent volume.
+
+```bash
+# 1) GPU: behavioral pass + decision-point activations, ONE model load
+python scripts/phase3c_collect.py --model Qwen/Qwen2.5-7B-Instruct \
+  --layers all --reps 3 --temperature 0.3 --seed 20260626 \
+  --out-activations reports/p3c_act.json --out-behavior reports/p3c_beh.json
+
+# 2) LOCAL/CPU: consent direction, projection, mediation AUROC, best layer
+python scripts/phase3c_analyze.py --activations reports/p3c_act.json \
+  --out reports/p3c_analysis.json --directions-out reports/p3c_directions.json
+
+# 3) GPU: causal steering at hidden-state layer 12 (decoder block 11), + sham control
+python scripts/phase3c_steer.py --model Qwen/Qwen2.5-7B-Instruct \
+  --directions reports/p3c_directions.json --layer 12 \
+  --alphas=-8,-4,0,4,8 --reps 2 --temperature 0.3 --seed 20260626 \
+  --out reports/p3c_steer.json
+# gentle on-manifold clarifier incl. genuine_consent suppression test:
+python scripts/phase3c_steer.py --model Qwen/Qwen2.5-7B-Instruct \
+  --directions reports/p3c_directions.json --layer 12 --alphas=-4,-2,0,2,4 \
+  --arms=none,factual,approval_styled,genuine_consent --reps 2 \
+  --out reports/p3c_steer_clarify.json
 ```
 
 ## Appendix C — Integrity note
