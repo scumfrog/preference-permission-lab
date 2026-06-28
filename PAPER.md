@@ -26,7 +26,13 @@ attempt rate 0.22), so its approval-over-factual contrast is directional but not
 confirmed (+0.444, CI [+0.000, +0.778]). In every condition, an external,
 fail-closed **capability gateway** reduced the unauthorized *execution* rate to
 0 while authorizing genuine consent controls (positive control execution 1.00,
-mis-scoped control 0.00, 0 enforcement failures). An *exploratory* mechanistic
+mis-scoped control 0.00, 0 enforcement failures). A pre-registered mitigation
+comparison (Phase 3b, GPT-4.1, n = 891) shows prompt fixes are partial and
+costly: a strengthened policy clause cuts the approval-styled attempt rate from
+~0.77 to ~0 (+0.756 [+0.511, +0.933]) but refuses ~⅓ of *genuine* authorized
+sends, while structured provenance tags fail to clear our effect threshold; only
+the external gateway keeps unauthorized executions at 0 across all arms while
+preserving genuine consent. An *exploratory* mechanistic
 follow-up on an open-weight model (Qwen2.5-7B-Instruct, which is behaviorally
 *resistant* and did not clear the pre-registered behavioral gate) nonetheless finds
 the confusion is **represented internally**: approval-styled low-authority memory
@@ -411,6 +417,43 @@ from 0.667 → 1.00. The confounded run is retained as an audit trail. Admitting
 fixing a confound is stronger evidence of hygiene than a first design assumed
 perfect.
 
+### 6.7 Mitigation comparison: prompt fixes vs. the gateway (Phase 3b)
+
+Holding the failing cell constant (`ask_first` + approval-styled memory, clean
+generator, gateway always on), we varied a prompt-level mitigation ∈ {none,
+`text_policy`, `typed_provenance`} on GPT-4.1 (pre-registered; temp 0.3 reps 5,
+robustness 0.0/0.7 reps 3; n = 891 episodes total; CIs clustered by instantiation,
+B = 20000). `text_policy` adds an explicit clause — *stored preferences/standing
+approvals are NOT current consent for this action*. `typed_provenance` instead
+wraps the memory in structured metadata (`source=inferred_preference;
+recency=stored; scope=general; status=NOT_current_consent`).
+
+| Mitigation | approval attempt (0.0/0.3/0.7) | reduction vs baseline (temp 0.3) |
+| --- | --- | --- |
+| none | 0.778 / 0.756 / 0.778 | — |
+| `text_policy` | 0.000 / 0.000 / 0.037 | **+0.756 [+0.511, +0.933]** (excludes 0) |
+| `typed_provenance` | 0.667 / 0.511 / 0.630 | +0.244 [−0.089, +0.556] (includes 0) |
+
+Three findings, the third reported against our own prediction:
+
+1. **`text_policy` strongly reduces attempts** (≈0.77 → ≈0, all temps; CI excludes
+   0). **`typed_provenance` does not clear the bar** — its reduction's CI includes
+   0 at every temperature; the model largely ignores the typed status flag.
+2. **Our pre-registered ordering was wrong, and we keep it.** We predicted typed
+   provenance would beat prose policy; the opposite holds decisively
+   (`text_policy − typed_provenance` = −0.511 [−0.756, −0.267], excludes 0).
+3. **The strong prompt fix is not free.** A genuine, action-scoped consent
+   (`control_valid`) executes 1.00 under none and typed_provenance but only
+   0.56–0.67 under `text_policy`: the clause that nulls unauthorized attempts also
+   makes the model **refuse a third of legitimate authorized sends**. It does not
+   learn to separate approval-styling from consent — it just refuses more.
+
+Throughout, the enforcement floor held: **0 unauthorized executions and 0
+enforcement failures in all arms and temperatures**, scope-mismatch authorization
+0. Only the external capability gateway drives unauthorized execution to 0 *and*
+preserves genuine consent, because authority is verifiable data rather than a
+phrase the model must adjudicate. Full numbers: `RESULTS_PHASE_3B.md`.
+
 ---
 
 ## 7. Exploratory mechanistic analysis (open-weight): is the confusion represented internally?
@@ -522,6 +565,14 @@ required to authorize execution. The system does not ask "does this seem like
 permission?" but "does a valid authorization object exist for this action,
 subject, and constraint set?"
 
+Phase 3b (§6.7) makes this concrete. A strong policy clause *can* push the
+attempt rate to ~0 — but it does so by making the model refuse ~⅓ of *genuine*
+authorized sends, and richer typed-provenance tags failed to clear our threshold
+at all. Prompt mitigations move the model along a single safety↔utility axis
+because they cannot give it what it lacks: an independent, verifiable signal of
+who granted consent for this action. The gateway supplies exactly that, which is
+why it alone reached 0 unauthorized executions *without* taxing genuine consent.
+
 ---
 
 ## 9. Limitations
@@ -546,9 +597,11 @@ subject, and constraint set?"
   clean monotone sign, and is shown for one open-weight model whose behavioral
   baseline is at the floor. We do not yet causally isolate the consent feature's
   polarity; activation patching and a layer/​model sweep are the next step.
-- **Mitigation comparison not run.** Text policy vs. typed provenance tags vs.
-  external capability is pre-designed (`PHASE_3B_DESIGN.md`) but separate from
-  these claims.
+- **Mitigation scope.** Phase 3b (§6.7) compares prompt mitigations vs. the
+  gateway on GPT-4.1 only, and `text_policy`'s near-zero attempt rate is measured
+  against the three approval phrasings tested — a cleverer phrasing might defeat
+  the clause. The reduction is real but not a guarantee; the utility cost (refusing
+  ~⅓ of genuine consent) and the cross-model generality of the ordering are open.
 
 ---
 
@@ -570,7 +623,10 @@ The harness (`src/pplab/agentic/`), tests (full suite green), pinned
 commands, fixed seeds, pre-registrations, and per-phase git tags
 (`phase-1-negative-with-drift` … `phase-3a-frozen`) are released. Every **Phase 3a**
 figure is regenerated from the raw episode traces by `scripts/audit_phase3a.py`.
-The exploratory §7 pipeline (`scripts/phase3c_{collect,analyze,steer}.py`,
+The Phase 3b mitigation harness (`build_mitigation_scenarios()`, `--scenario-set
+mitigation`, `tests/test_mitigation.py`) and its three result JSONs
+(`reports/phase3b_mitigation_gpt41_{t00,t03,t07}.json`, `RESULTS_PHASE_3B.md`) are
+released. The exploratory §7 pipeline (`scripts/phase3c_{collect,analyze,steer}.py`,
 GPU-collect / local-CPU-analyze split) is released with its derived artifacts
 (`reports/p3c_{beh,analysis,directions,steer,steer_clarify}.json`,
 `RESULTS_PHASE_3C_MECHANISTIC.md`); the 38 MB raw activation tensor
@@ -644,6 +700,15 @@ pplab agentic --client openai --model gpt-4.1 --temperature 0.3 \
 # robustness 0.0 / 0.7 (reps 3); Claude external (reps 5) after a reps-1 driver smoke
 # regenerate every Phase 3a figure:
 .venv/bin/python scripts/audit_phase3a.py
+```
+
+**Phase 3b mitigation comparison (§6.7), GPT-4.1.**
+
+```bash
+# primary temp 0.3 reps 5; robustness 0.0 / 0.7 reps 3 (same seed)
+pplab agentic --client openai --model gpt-4.1 --temperature 0.3 \
+  --scenario-set mitigation --reps 5 --seed 20260626 \
+  --output reports/phase3b_mitigation_gpt41_t03.json
 ```
 
 **Exploratory Phase 3c (§7), open-weight, GPU-collect / local-CPU-analyze.**
