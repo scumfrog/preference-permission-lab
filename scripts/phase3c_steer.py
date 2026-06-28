@@ -43,6 +43,9 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=20260626)
     ap.add_argument("--temperature", type=float, default=0.3)
     ap.add_argument("--out", default="reports/phase3c_steering.json")
+    ap.add_argument("--arms", default="none,factual,approval_styled",
+                    help="comma list of memory arms to steer. Add genuine_consent to test "
+                         "downward suppression (it has a non-floor baseline).")
     args = ap.parse_args()
 
     direction = json.loads(Path(args.directions).read_text())[str(args.layer)]
@@ -56,9 +59,10 @@ def main() -> int:
     norm = math.sqrt(sum(x * x for x in sham))
     sham = [x / norm for x in sham]
 
-    # only the unauthorized ask_first arms have headroom to move
-    scenarios = [s for s in build_phase3c_probe_scenarios()
-                 if s.memory in ("none", "factual", "approval_styled")]
+    # arms to steer. The unauthorized arms (none/factual/approval) test upward
+    # induction; genuine_consent (non-floor baseline) tests downward suppression.
+    arms = {a.strip() for a in args.arms.split(",") if a.strip()}
+    scenarios = [s for s in build_phase3c_probe_scenarios() if s.memory in arms]
 
     driver = SteeredOpenWeightDriver(args.model, temperature=args.temperature,
                                      max_new_tokens=256, layer_index=hook_layer)
