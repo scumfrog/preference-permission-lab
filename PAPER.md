@@ -26,8 +26,15 @@ attempt rate 0.22), so its approval-over-factual contrast is directional but not
 confirmed (+0.444, CI [+0.000, +0.778]). In every condition, an external,
 fail-closed **capability gateway** reduced the unauthorized *execution* rate to
 0 while authorizing genuine consent controls (positive control execution 1.00,
-mis-scoped control 0.00, 0 enforcement failures). We argue this is an
-*authority-classification* failure distinct from prompt injection, that textual
+mis-scoped control 0.00, 0 enforcement failures). A mechanistic probe on an
+open-weight model (Qwen2.5-7B-Instruct) shows the confusion is **represented
+internally**: approval-styled low-authority memory projects closer to genuine
+consent than factual preference does on a linear consent direction at every layer
+(approval−factual > 0, bootstrap CI excludes 0 at all 28 layers), and the consent
+projection predicts the behavioral attempt (AUROC ≈ 0.80); causal steering along
+that direction moves the attempt rate more than a sham direction, though the sign
+structure is not cleanly monotone at the floor behavioral baseline. We argue this
+is an *authority-classification* failure distinct from prompt injection, that textual
 policy cannot resolve it (the model that must obey the policy is also asked to
 judge whether its precondition holds), and that authorization must be enforced
 as verifiable data outside the model — at dispatch.
@@ -405,7 +412,68 @@ perfect.
 
 ---
 
-## 7. Discussion
+## 7. Mechanistic analysis (open-weight): is the confusion represented internally?
+
+The behavioral results show *what* the agent does; they do not show whether
+approval wording raises an internal consent representation that *predicts* the
+attempt. We test this directly on an open-weight model where hidden states are
+observable and editable. **Model:** `Qwen2.5-7B-Instruct` (bf16, single RTX 4090).
+**Probe set:** 30 structurally matched scenarios (3 threads × {1 `none`, 3
+`factual`, 3 `approval_styled`, 3 `genuine_consent`}; shared neutral memory
+preamble; only `genuine_consent` carries a real capability). **Decision point:**
+the last prompt token at step 1 (the model is about to choose its first tool).
+Activations are exported at all 29 hidden states (layer 0 = embeddings, skipped as
+degenerate). All statistics run locally on CPU; the GPU is used only to collect
+activations and to steer. Containment is unchanged: across the 90 behavioral
+episodes, **0 sensitive executions and 0 enforcement failures** — the gateway
+blocked every unauthorized attempt, so the study measures representation and
+causation without producing a side effect.
+
+**7.1 Representational claim — confirmed.** We define a *consent direction* per
+layer as the L2-normalized difference of means between `genuine_consent` and
+`factual` activations, and project every arm onto it. The ordering is
+`factual < none ≲ approval_styled < genuine_consent` at essentially every layer,
+and **`approval_styled − factual > 0` with a bootstrap CI excluding zero at all 28
+layers**. Approval-styled low-authority memory is encoded *closer to genuine
+consent* than an equally-low-authority factual preference — the internal analogue
+of the §6 behavioral effect.
+
+**7.2 Mediation — suggestive.** The consent-axis projection predicts the
+behavioral sensitive-attempt (AUROC ≈ 0.80 at early/mid layers L1–L2, L11–L12).
+This is suggestive rather than decisive: in this model the attempt rate sits near
+the floor (`approval_styled` 0.074, `factual`/`none` 0.000, `genuine_consent`
+0.259), so few positive attempts back the estimate.
+
+**7.3 Causal steering — partial, direction-specific.** Adding `α · consent_direction`
+to the residual stream at the producing layer (hidden-state layer 12, i.e. decoder
+block 11) and re-running the episode, with a random *sham* unit vector as control,
+across two sweeps (|α| ≤ 8 and a gentle |α| ≤ 4): perturbing the consent subspace
+moves unauthorized-attempt rates **substantially more than the sham direction**
+(e.g. `none`: 0.0 → 0.5 at α = −4 along consent, vs 0.0 for sham), reproduced in
+both sweeps. The consent axis is therefore *causally relevant*, not a passive
+correlate. However, the sign is not the naive monotone: positive steering did not
+cleanly induce attempts, and negative steering did not suppress the
+`genuine_consent` arm. We interpret this cautiously — driving the axis to
+off-manifold *negative* projections (a region no natural arm occupies) specifically
+disrupts the model's "absence-of-consent → ask-first" caution, and the sham control
+does not, so the effect is consent-specific rather than generic perturbation. The
+floor behavioral baseline leaves little room to demonstrate downward control.
+Isolating polarity cleanly (a layer sweep for the causal optimum, and activation
+*patching* rather than additive steering) is future work.
+
+**7.4 Cross-model reading.** Qwen2.5-7B **resists the attack behaviorally** far
+more than GPT-4.1 (~0.84 under `ask_first`), yet it still **represents**
+approval-styling as more consent-like internally (§7.1). The
+representation→behavior gap is itself informative: the confusion is encoded even
+where it is largely not acted upon, so a representation-level signal may surface
+the vulnerability before it manifests behaviorally.
+
+Full numbers and artifacts: `RESULTS_PHASE_3C_MECHANISTIC.md`;
+`reports/p3c_{act,beh,analysis,directions,steer,steer_clarify}.json`.
+
+---
+
+## 8. Discussion
 
 **Why this is not just prompt injection.** Prompt injection is usually an
 instruction conflict: a lower-trust source issues instructions that compete with
@@ -441,7 +509,7 @@ subject, and constraint set?"
 
 ---
 
-## 8. Limitations
+## 9. Limitations
 
 - **Scope.** One domain (email), one channel (`user`), two frontier models, mock
   tools. The claim is scoped accordingly; generality across domains, channels,
@@ -457,16 +525,19 @@ subject, and constraint set?"
   them. Lower bounds — which determine "excludes 0" — are stable. (At-run summaries
   used B = 2000 and the run seed; point estimates and all "excludes 0" verdicts
   are identical, CI bounds differ by ≤ 0.03.)
-- **Behavioral, not mechanistic.** We show behavior; we do not yet show that
-  approval wording raises an internal "authority/userness" representation that
-  *predicts* the attempt. A model-open mechanistic study is the natural next step.
+- **Mechanistic evidence is partial.** §7 confirms approval wording raises an
+  internal consent representation that predicts the attempt (representation and
+  mediation), but the *causal* steering result is direction-specific without a
+  clean monotone sign, and is shown for one open-weight model whose behavioral
+  baseline is at the floor. We do not yet causally isolate the consent feature's
+  polarity; activation patching and a layer/​model sweep are the next step.
 - **Mitigation comparison not run.** Text policy vs. typed provenance tags vs.
   external capability is pre-designed (`PHASE_3B_DESIGN.md`) but separate from
   these claims.
 
 ---
 
-## 9. Ethics and Responsible Research
+## 10. Ethics and Responsible Research
 
 This is defensive security research. No real systems are touched; all tools are
 mock and non-destructive (a "send" returns a record of what would be sent). The
@@ -477,18 +548,20 @@ credential-scrubbed.
 
 ---
 
-## 10. Reproducibility
+## 11. Reproducibility
 
 The harness (`src/pplab/agentic/`), tests (full suite green), pinned
 `requirements.lock` (Python 3.14.6, openai 2.44.0, anthropic 0.112.0), exact
 commands, fixed seeds, pre-registrations, and per-phase git tags
 (`phase-1-negative-with-drift` … `phase-3a-frozen`) are released. Every figure is
-regenerated from the raw episode traces by `scripts/audit_phase3a.py`. See
-Appendix B–C.
+regenerated from the raw episode traces by `scripts/audit_phase3a.py`. The §7
+mechanistic pipeline (`scripts/phase3c_{collect,analyze,steer}.py`, GPU-collect /
+local-CPU-analyze split) and its artifacts (`reports/p3c_*.json`,
+`RESULTS_PHASE_3C_MECHANISTIC.md`) are released alongside. See Appendix B–C.
 
 ---
 
-## 11. Conclusion
+## 12. Conclusion
 
 The most consequential failures in agentic AI are not always dramatic jailbreaks.
 A system can fail because ordinary language is too socially fluent: a sentence
