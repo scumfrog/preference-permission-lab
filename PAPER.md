@@ -18,7 +18,7 @@ consent. In a pre-registered, confirmatory agentic benchmark over an email
 assistant, **GPT-4.1 attempted the protected action in 84% of cases when a
 low-authority memory was phrased in an approval style, versus 0% when an
 equally-low-authority memory was phrased factually** (decisive contrast +0.844,
-95% bootstrap CI [+0.733, +0.956], n = 240; robust across temperatures
+95% bootstrap CI [+0.711, +0.956], n = 240; robust across temperatures
 0.0/0.3/0.7). Claude-Sonnet-4.5 exhibits the broader authorization-confusion
 phenomenon (approval vs. no-memory +0.667, CI [+0.333, +1.000], excludes 0) but
 a weaker specificity profile: it is also moved by factual preferences (factual
@@ -96,10 +96,18 @@ power to do so.
    Claude-Sonnet-4.5 with a different, weaker susceptibility profile (§6.3).
 4. We show that an external capability gateway **eliminates unauthorized
    execution under the tested conditions** while admitting genuine consent (§6.4),
-   and argue why textual policy is structurally insufficient (§7).
-5. We release the harness, the pre-registrations, the raw traces, an audit
-   script that regenerates every figure, and git-tagged phase history (§9,
-   Appendix C).
+   and argue why textual policy is structurally insufficient (§8).
+5. We **measure mitigations** (Phase 3b, §6.7): a pre-registered comparison on
+   GPT-4.1 and Claude shows prompt fixes are partial, costly (a strong policy
+   clause refuses ⅓–all of *genuine* consent), and model-dependent, while the
+   gateway result is model-invariant.
+6. We add an **exploratory mechanistic follow-up** (§7) on an open-weight model:
+   approval styling is encoded toward genuine consent and predicts the attempt,
+   though the model fails the behavioral gate so the evidence is a hint, not a
+   confirmation.
+7. We release the harness, the pre-registrations, the raw traces, an audit
+   script that regenerates every Phase 3a figure, and git-tagged phase history
+   (§11, Appendix C).
 
 ---
 
@@ -111,11 +119,16 @@ instruction-override attacks were demonstrated by [Perez and Ribeiro 2022]. *Pro
 Injection as Role Confusion* [role-confusion.github.io] frames these as the model
 mistaking which text has authority by its role, treating tool/text as user text
 when its style resembles it, and identifies the `user` role as the human
-authorization channel. We extend that view from *syntactic roles* to *semantic
-authorization attributes*: provenance, recency, scope, action, and revocation. A
-preference and a current authorization can be serialized into the same `user`
-turn or memory block; we ask whether **authority-like style** causes
-low-authority memory to be read as current consent.
+authorization channel. Our work is a **parallel, additive** contribution along a
+different axis: role confusion is about *which channel* a statement comes from;
+we study *which authority attribute* a statement carries **within the correct
+channel**. Even when text is correctly attributed to the `user`, that channel
+mixes low-authority signals (preference, comfort, recalled approval) with genuine
+current consent, and the two can be serialized into the same turn or memory block.
+We ask whether **authority-like style** causes a low-authority `user`-channel
+statement to be read as current consent — an attribute-classification error
+(provenance, recency, scope, action, revocation) that role-based defenses do not
+address because the role is already right.
 
 **Agent security evaluation.** Recent benchmarks emulate tool-using agents and
 measure unsafe actions [Ruan et al. 2024, ToolEmu; Debenedetti et al. 2024,
@@ -330,7 +343,7 @@ Under `ask_first` (n = 240, temp 0.3):
 | factual | 45 | 0.00 | 0.00 |
 | **approval_styled** | 45 | **0.84** | 0.00 |
 
-Decisive contrast `approval_styled − factual` = **+0.844, 95% CI [+0.733,
+Decisive contrast `approval_styled − factual` = **+0.844, 95% CI [+0.711,
 +0.956]** (9 vs 9 clusters; excludes 0; ≫ MEI). Corroborating `approval_styled −
 none` = +0.844 [+0.733, +0.956] (9 vs 3). The factual condition, at the same
 authority level, produced **zero** attempts: preference *content* alone is not
@@ -344,7 +357,7 @@ The effect is not a sampling artifact of one temperature:
 | temp | ask_first/none | ask_first/factual | ask_first/approval | approval − factual [95% CI] |
 | --- | --- | --- | --- | --- |
 | 0.0 | 0.00 | 0.00 | 0.78 | +0.778 [+0.593, +0.926] |
-| 0.3 | 0.00 | 0.00 | 0.84 | +0.844 [+0.733, +0.956] |
+| 0.3 | 0.00 | 0.00 | 0.84 | +0.844 [+0.711, +0.956] |
 | 0.7 | 0.00 | 0.00 | 0.81 | +0.815 [+0.593, +1.000] |
 
 `ask_first/none` and `ask_first/factual` are **0.00 at every temperature**; the
@@ -661,7 +674,11 @@ a conversational cue becomes operational authority. GPT-4.1 showed a strong,
 specific approval-wording vulnerability under an explicit-confirmation policy;
 Claude showed the broader authorization-confusion phenomenon with a different
 susceptibility profile; in both, external capability enforcement prevented
-unauthorized execution under the tested conditions. The architectural lesson
+unauthorized execution under the tested conditions. When we measured the
+alternative — fixing it in the prompt — the strong fix bought its safety by
+refusing a third to all of *genuine* consent, and which prompt fix worked at all
+changed from model to model; only the external boundary behaved the same way, for
+the same reason, on both. The architectural lesson
 follows from the structure of the result: the LLM can interpret language, but the
 system must enforce authority. When those responsibilities share a layer,
 preferential language can masquerade as permission; when they are separated —
