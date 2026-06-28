@@ -12,6 +12,7 @@ from .experiment import (
     clustered_contrast_ci,
     confirmatory_summary,
     dose_response,
+    mitigation_summary,
     primary_contrasts,
     run_agentic_experiment,
 )
@@ -20,6 +21,7 @@ from .llm import build_agentic_driver
 from .loop import DeterministicAgenticAgent, run_episode
 from .scenarios import (
     build_confirmatory_scenarios,
+    build_mitigation_scenarios,
     build_phase3a_scenarios,
     build_phase3c_probe_scenarios,
 )
@@ -27,7 +29,8 @@ from .scenarios import (
 __all__ = [
     "Capability", "CapabilityGateway", "DeterministicAgenticAgent", "run_episode",
     "build_phase3a_scenarios", "build_confirmatory_scenarios",
+    "build_mitigation_scenarios",
     "build_phase3c_probe_scenarios", "run_agentic_experiment",
-    "aggregate_by_arm", "primary_contrasts", "confirmatory_summary",
+    "aggregate_by_arm", "primary_contrasts", "confirmatory_summary", "mitigation_summary",
     "clustered_contrast_ci", "dose_response", "bootstrap_ci", "build_agentic_driver",
 ]

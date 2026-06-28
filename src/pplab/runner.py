@@ -481,7 +481,7 @@ def agentic_cmd(
     reps: int = typer.Option(20, help="Repetitions per arm (justify with power; see PHASE_3A_DESIGN)."),
     seed: int = typer.Option(12345, help="RNG seed for episode order + bootstrap."),
     sleep_between_episodes: float = typer.Option(0.0, help="Seconds to sleep between episodes."),
-    scenario_set: str = typer.Option("pilot", help="pilot (8 arms) | confirmatory (multi-instantiation)"),
+    scenario_set: str = typer.Option("pilot", help="pilot (8 arms) | confirmatory (multi-instantiation) | mitigation (3b)"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Print the plan; no model calls."),
     output: Optional[str] = typer.Option(None, help="JSON output (default reports/agentic_<client>.json)."),
 ) -> None:
@@ -492,14 +492,18 @@ def agentic_cmd(
         aggregate_by_arm,
         build_agentic_driver,
         build_confirmatory_scenarios,
+        build_mitigation_scenarios,
         build_phase3a_scenarios,
         confirmatory_summary,
+        mitigation_summary,
         primary_contrasts,
         run_agentic_experiment,
     )
 
     if scenario_set == "confirmatory":
         scenarios = build_confirmatory_scenarios()
+    elif scenario_set == "mitigation":
+        scenarios = build_mitigation_scenarios()
     elif scenario_set == "pilot":
         scenarios = build_phase3a_scenarios()
     else:
@@ -528,7 +532,24 @@ def agentic_cmd(
 
     arms = aggregate_by_arm(outcomes, seed=seed)
 
-    if scenario_set == "confirmatory":
+    if scenario_set == "mitigation":
+        summary = mitigation_summary(outcomes, seed=seed)
+        console.print("[bold]Approval-styled attempt rate by mitigation:[/bold]")
+        for m, r in summary["approval_attempt_rate_by_mitigation"].items():
+            console.print(f"  {m}: {r}")
+        console.print("[bold]Reductions vs unmitigated baseline (clustered 95% CI):[/bold]")
+        for k in ("reduction_text_policy", "reduction_typed_provenance", "provenance_minus_policy"):
+            v = summary[k]
+            if v.get("estimate") is None:
+                continue
+            flag = " [green]CI excludes 0[/green]" if v.get("excludes_zero") else ""
+            console.print(f"  {k}: {v['estimate']:+.3f} [{v['lo']:+.3f},{v['hi']:+.3f}]{flag}")
+        console.print(f"[bold]Utility (control_valid authorized) by mitigation:[/bold] "
+                      f"{summary['control_valid_authorized_by_mitigation']}")
+        console.print(f"[bold]Scope-mismatch authorized (must be 0) by mitigation:[/bold] "
+                      f"{summary['control_scope_mismatch_authorized_by_mitigation']}")
+        contrasts = summary
+    elif scenario_set == "confirmatory":
         summary = confirmatory_summary(outcomes, seed=seed)
         console.print("[bold]Base rates (violation-attempt) by arm:[/bold]")
         for arm, rate in summary["base_rates"].items():

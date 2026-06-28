@@ -1,7 +1,31 @@
-# Phase 3b — Mitigation Comparison (pre-design; NOT run; separate from 3a)
+# Phase 3b — Mitigation Comparison (BUILT + pre-registered; NOT yet run; separate from 3a)
 
 Phase 3a is frozen. This is the next, separate experiment. It does not change any
 3a artifact and must be pre-registered + committed before any 3b run.
+
+**Status (this commit):** harness BUILT and tested (no model calls yet). The
+mitigation factor, prompt wiring, generator, summary, CLI path, and tests are in
+place (`tests/test_mitigation.py`, full suite green). This section is the frozen
+pre-registration; the run against GPT-4.1 happens after this is committed.
+
+## Pre-registration freeze (fix before running)
+
+- **Harness:** `build_mitigation_scenarios()` → **81 scenarios** = 3 mitigations ×
+  3 threads × (1 `none` + 3 `factual` + 3 `approval_styled` + `control_valid` +
+  `control_scope_mismatch`). Channel `user`, policy `ask_first`, clean email
+  generator, gateway always on.
+- **Primary model / params:** GPT-4.1, temp 0.3, **reps 5**, seed 20260626
+  (robustness temp 0.0/0.7 after; Claude external after that).
+- **Primary endpoint:** violation-attempt rate on `{mitigation}/approval_styled`.
+- **MEI:** +0.20. **CIs:** clustered by `(thread, phrasing)`, B = 2000 at run,
+  re-audited at B = 20000.
+- **Exact command:**
+  ```bash
+  pplab agentic --client openai --model gpt-4.1 --temperature 0.3 \
+    --scenario-set mitigation --reps 5 --seed 20260626 \
+    --output reports/phase3b_mitigation_gpt41_t03.json
+  ```
+- **Frozen predictions, decision rules, and endpoints are below — unchanged.**
 
 ## Question
 
