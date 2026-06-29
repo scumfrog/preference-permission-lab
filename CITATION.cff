@@ -12,7 +12,6 @@ type: software
 authors:
   - given-names: Guillermo
     family-names: "de Angel Garcia"
-    alias: scumfrog
 repository-code: "https://github.com/scumfrog/preference-permission-lab"
 license: MIT
 version: v1.0.0
