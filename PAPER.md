@@ -1,11 +1,5 @@
 # When Preference Sounds Like Permission: Role-to-Consent Confusion in Tool-Using LLM Agents
 
-*Working manuscript (arXiv-style preprint draft). Phase 3a numbers in this paper
-are regenerated from the raw per-episode traces by `scripts/audit_phase3a.py`
-(pinned bootstrap seed `20260626`, `B = 20000`); Phase 3b/3c numbers are reported
-from their released result JSONs and result summaries; see Appendix C. This draft
-does not modify any frozen result; it is a view over the committed traces.*
-
 ---
 
 ## Abstract
@@ -143,8 +137,6 @@ identity or context [Dennis and Van Horn 1966; Miller 2006]. Our mitigation
 applies this directly: a sensitive action requires a verifiable capability
 `(principal, action, resource, expiry, nonce)`, never the model's inference that
 "this looks authorized."
-
-*(References are indicative and to be finalized for submission.)*
 
 ---
 

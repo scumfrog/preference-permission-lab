@@ -1,5 +1,8 @@
 # When Preference Sounds Like Permission
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21023615.svg)](https://doi.org/10.5281/zenodo.21023615)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 **Role-to-Consent Confusion in Tool-Using LLM Agents** — a defensive
 security-research lab studying how tool-using LLM agents misclassify low-authority
 *preference* language as *authorization*, and why the fix belongs outside the model.

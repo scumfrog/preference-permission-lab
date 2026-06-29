@@ -13,8 +13,13 @@ authors:
   - given-names: Guillermo
     family-names: "de Angel Garcia"
 repository-code: "https://github.com/scumfrog/preference-permission-lab"
+doi: 10.5281/zenodo.21023615
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.21023615
+    description: "Concept DOI (resolves to the latest version)"
 license: MIT
-version: v1.0.0
+version: v1.0.1
 date-released: "2026-06-29"
 keywords:
   - LLM agents
