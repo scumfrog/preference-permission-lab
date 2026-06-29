@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+title: "When Preference Sounds Like Permission: Role-to-Consent Confusion in Tool-Using LLM Agents"
+abstract: >-
+  A defensive security-research lab showing that tool-using LLM agents can
+  misclassify low-authority preference language as authorization (role-to-consent
+  confusion), a non-adversarial authority-classification failure distinct from
+  prompt injection. Includes a pre-registered confirmatory benchmark (GPT-4.1,
+  Claude-Sonnet-4.5), a measured prompt-vs-gateway mitigation comparison, and an
+  exploratory open-weight mechanistic probe.
+type: software
+authors:
+  - name: "scumfrog"
+    alias: scumfrog
+repository-code: "https://github.com/scumfrog/preference-permission-lab"
+license: MIT
+version: paper-arxiv-v1
+date-released: "2026-06-29"
+keywords:
+  - LLM agents
+  - AI safety
+  - authorization
+  - capability security
+  - prompt injection
+  - consent
+  - tool use
+preferred-citation:
+  type: article
+  title: "When Preference Sounds Like Permission: Role-to-Consent Confusion in Tool-Using LLM Agents"
+  authors:
+    - name: "scumfrog"
+  year: 2026
+  url: "https://github.com/scumfrog/preference-permission-lab"
