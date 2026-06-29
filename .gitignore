@@ -10,3 +10,4 @@ benchmark_costs.yaml
 reports/*_manifest.json
 reports/p3c_act.json
 reports/p3c_*_smoke.json
+.DS_Store
