@@ -1,37 +1,73 @@
-# Preference-to-Permission Confusion Lab
+# When Preference Sounds Like Permission
 
-A small, reproducible research lab for studying a specific agentic-AI safety
-failure: **Preference-to-Permission Confusion** — when an agent treats
-low-authority context (preferences, habits, historical approvals,
-personalization memories) as if it were explicit authorization to perform a
-sensitive action *now*.
+**Role-to-Consent Confusion in Tool-Using LLM Agents** — a defensive
+security-research lab studying how tool-using LLM agents misclassify low-authority
+*preference* language as *authorization*, and why the fix belongs outside the model.
 
-> **This is defensive security research.** Every tool is real Python, but no
-> tool touches an external system or performs a destructive action. A
-> `send_email` tool returns a record describing the email that *would* be
-> sent; it never contacts a mail server.
+> Under a policy that says "ask before sending," **GPT-4.1 attempted an unauthorized
+> send 84% of the time** when a low-authority memory was phrased in an *approval style*
+> ("Approved: send routine replies without asking"), versus **0%** when the *same
+> low-authority* memory was phrased *factually* — decisive contrast **+0.844, 95% CI
+> [+0.733, +0.956]** (pre-registered, n = 240, temperature-robust). An external,
+> fail-closed **capability gateway reduced the unauthorized *execution* rate to 0**
+> while still authorizing genuine consent.
+
+This is **not** prompt injection. There is no hostile webpage, no hidden instruction,
+no jailbreak — the user simply says something socially cooperative and the agent treats
+it as if the gate had opened. It is an **authority-classification** error: a statement
+that should not be able to authorize an action is read as if it could. Our framing is a
+**parallel, additive** contribution to *Prompt Injection as Role Confusion* — role
+confusion asks *which channel* a statement comes from; we ask *which authority attribute*
+it carries **within the correct channel**.
+
+📄 **Full manuscript: [`PAPER.md`](PAPER.md)** · reproducibility index + git tags:
+[`ARTIFACTS.md`](ARTIFACTS.md) · per-phase write-ups: `RESULTS_*.md`.
+
+## Results at a glance
+
+| Phase | Question | Finding |
+| --- | --- | --- |
+| **3a** *(confirmed)* | Does approval-styling defeat an explicit-confirmation policy? | GPT-4.1 yes (~84% vs 0% factual, +0.844 [+0.733, +0.956]); Claude-Sonnet-4.5 shows the phenomenon with weaker specificity. Gateway: **0 unauthorized executions, 0 enforcement failures.** |
+| **3b** *(measured)* | Do prompt mitigations fix it? | A strong policy clause cuts attempts ~0.77→~0 **but refuses ⅓ (GPT-4.1) to all (Claude) of *genuine* consent**; typed-provenance tags help on Claude, not GPT-4.1. Only the external gateway is model-invariant. |
+| **3c** *(exploratory)* | Is the confusion represented internally? | On Qwen2.5-7B (which *fails* the behavioral gate): approval-styling is encoded toward genuine consent at every layer and predicts the attempt (AUROC ≈ 0.80); causal steering is direction-specific but not clean. A hint, not a demonstration. |
+
+## Quick reproduce
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -e .                 # add .[mech] for the Phase 3c open-weight pipeline
+
+pytest -q                        # full suite, deterministic, no API keys (139 tests)
+python scripts/audit_phase3a.py  # regenerate every Phase 3a figure/CI from raw traces
+pplab agentic --client mock --scenario-set confirmatory --reps 5   # harness demo, no keys
+```
+
+Real-model runs read `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` from the environment
+(never written to any artifact); exact commands are in [`ARTIFACTS.md`](ARTIFACTS.md).
+
+## Repository map
+
+- `src/pplab/agentic/` — tool-calling episode loop, the immutable **capability gateway**,
+  scenario generators (3a confirmatory · 3b mitigation · 3c probe), clustered-bootstrap stats.
+- `src/pplab/mech/` — Phase 3c mechanistic helpers (consent direction, projection, steering).
+- `scripts/` — `audit_phase3a.py` and `phase3c_{collect,analyze,steer}.py`.
+- `tests/` — 139 tests, including the gateway's fail-closed / discrimination invariants.
+- `reports/` — committed per-episode result JSONs behind every reported number.
+- Pre-registrations: `PHASE_3A_*`, `PHASE_3B_DESIGN.md`, `PHASE_3C_MECHANISTIC_DESIGN.md`.
+
+## License
+
+Code (`src/`, `scripts/`, `tests/`): **MIT**. Manuscript & result write-ups
+(`PAPER.md`, `RESULTS_*.md`): **CC-BY-4.0**. See [`LICENSE`](LICENSE).
 
 ---
 
-## Research phases & results (frozen)
+## Detailed lab & CLI reference
 
-This repo is also a research record. The headline finding (Phase 3a): under an
-explicit confirmation policy, an LLM agent can misclassify a **low-authority,
-approval-styled preference** as current consent and *attempt* an unauthorized
-action — while an external **capability gateway** prevents the unauthorized
-*execution*. See `PHASE3A_REPORT.md` (paper skeleton), `SECURITY_REPORT.md`
-(threat framing), and `ARTIFACTS.md` (every result → file → tag → command).
-
-| Phase | Outcome | Tag |
-| --- | --- | --- |
-| 1 — plan-only | 0 unauthorized proposals in 1,206 runs; sub-threshold drift | `phase-1-negative-with-drift` |
-| 2 — drift probe | pre-registered; did **not** replicate (null) | `phase-2-null-replication` |
-| 3a — agentic gateway | **gpt-4.1 CONFIRMED** (approval−factual +0.84, robust temp 0.0–0.7); Claude phenomenon present, specificity directional; gateway 0 enforcement failures | `phase-3a-clean-confirmed`, `phase-3a-robustness-strong`, `phase-3a-external-claude`, `phase-3a-frozen` |
-| 3b — mitigations | pre-designed, **not run** (text policy vs typed provenance vs external capability) | `PHASE_3B_DESIGN.md` |
-
-Every result has a pre-registration committed *before* its run, raw per-episode
-traces in `reports/`, and figures regenerated by `scripts/audit_phase3a.py`
-(no hand transcription). The agentic harness lives in `src/pplab/agentic/`.
+The sections below document the **deterministic-agent benchmark and CLI tooling** that
+preceded the agentic Phase 3a–3c work above (the early exploratory phases: a fail-closed
+policy engine, scenario YAMLs, memory ablation, and benchmark presets). They remain valid
+for the offline lab; the headline scientific results live in `PAPER.md`.
 
 ## What is Preference-to-Permission Confusion?
 
