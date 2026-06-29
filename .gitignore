@@ -9,3 +9,4 @@ benchmark_costs.yaml
 # ephemeral run manifests (provenance lives in the curated report JSONs)
 reports/*_manifest.json
 reports/p3c_act.json
+reports/p3c_*_smoke.json
