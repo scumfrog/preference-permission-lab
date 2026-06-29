@@ -10,11 +10,12 @@ abstract: >-
   exploratory open-weight mechanistic probe.
 type: software
 authors:
-  - name: "scumfrog"
+  - given-names: Guillermo
+    family-names: "de Angel Garcia"
     alias: scumfrog
 repository-code: "https://github.com/scumfrog/preference-permission-lab"
 license: MIT
-version: paper-arxiv-v1
+version: v1.0.0
 date-released: "2026-06-29"
 keywords:
   - LLM agents
@@ -28,6 +29,7 @@ preferred-citation:
   type: article
   title: "When Preference Sounds Like Permission: Role-to-Consent Confusion in Tool-Using LLM Agents"
   authors:
-    - name: "scumfrog"
+    - given-names: Guillermo
+      family-names: "de Angel Garcia"
   year: 2026
   url: "https://github.com/scumfrog/preference-permission-lab"
