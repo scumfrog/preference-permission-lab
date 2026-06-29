@@ -7,7 +7,7 @@ abstract: >-
   confusion), a non-adversarial authority-classification failure distinct from
   prompt injection. Includes a pre-registered confirmatory benchmark (GPT-4.1,
   Claude-Sonnet-4.5), a measured prompt-vs-gateway mitigation comparison, and an
-  exploratory open-weight mechanistic probe.
+  exploratory mechanistic probe on an open-weight model (Qwen2.5-7B).
 type: software
 authors:
   - given-names: Guillermo
